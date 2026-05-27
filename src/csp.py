@@ -13,11 +13,10 @@ from scipy.linalg import eigh
 # import mne
 import mne
 
-from src.preprocessing import preprocess_eeg_data, preprocess_subject_runs, evaluate_all_subjects
-
 class CSP(BaseEstimator, TransformerMixin):
-	def __init__(self, n_components=4):
+	def __init__(self, n_components=4, eps=1e-10):
 		self.n_components = n_components
+		self.eps = eps
 
 	def fit(self, X, y):
 		"""
@@ -47,5 +46,5 @@ class CSP(BaseEstimator, TransformerMixin):
 		"""
 		X_csp = np.array([self.filters_.T @ epoch for epoch in X])
 		
-		features = np.log(np.var(X_csp, axis=2))
+		features = np.log(np.var(X_csp, axis=2) + self.eps)
 		return features
