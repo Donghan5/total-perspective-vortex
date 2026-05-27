@@ -4,7 +4,8 @@ import mne
 import numpy as np
 from sklearn.model_selection import cross_val_score
 
-DATA_ROOT = Path("physionet.org/files/eegmmidb/1.0.0")
+PROJECT_ROOT = Path(__file__).parent.parent
+DATA_ROOT = PROJECT_ROOT / "physionet.org" / "files" / "eegmmidb" / "1.0.0"
 
 def build_edf_path(subject_id: int, run_id: int) -> Path:
 	"""
@@ -14,7 +15,14 @@ def build_edf_path(subject_id: int, run_id: int) -> Path:
 	Returns:
 	- Path to the EDF file.
 	"""
-	return DATA_ROOT / f"S{subject_id:03d}" / f"S{subject_id:03d}R{run_id:02d}.edf"
+	if not 1 <= subject_id <= 109:
+		raise ValueError("subject_id must be between 1 and 109")
+	if not 1 <= run_id <= 14:
+		raise ValueError("run_id must be between 1 and 14")
+	
+	subject_dir = f"S{subject_id:03d}"
+	filename = f"S{subject_id:03d}R{run_id:02d}.edf"
+	return DATA_ROOT / subject_dir / filename
 
 def load_raw_eeg(subject_id: int, run_id: int) -> mne.io.BaseRaw:
 	"""
@@ -25,6 +33,13 @@ def load_raw_eeg(subject_id: int, run_id: int) -> mne.io.BaseRaw:
 	- Loaded raw EEG data.
 	"""
 	edf_path = build_edf_path(subject_id, run_id)
+
+	if not edf_path.exists():
+		raise FileNotFoundError(
+			f"EDF file not found: {edf_path}\n"
+			"Download the dataset before running code"	
+		)
+
 	return mne.io.read_raw_edf(edf_path, preload=True)
 
 def filter_raw_eeg(
