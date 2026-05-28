@@ -1,8 +1,77 @@
 import numpy as np
 from sklearn.model_selection import cross_val_score
 from src.preprocessing import preprocess_subject_runs
+from src.pipeline import create_pipeline
 
-def evaluate_all_subjects(pipeline, run_ids: list[int], subject_range=range(1, 100)):
+EXPERIMENTS = {
+	"actual_left_vs_right_fist": [3, 7, 11],
+	"imagined_left_vs_right_fist": [4, 8, 12],
+	"actual_fists_vs_feet": [5, 9, 13],
+	"imagined_fists_vs_feet": [6, 10, 14],
+}
+
+def find_experiment_from_run(run_id: int) -> tuple[str, list[int]]:
+    for exp_name, run_ids in EXPERIMENTS.items():
+        if run_id in run_ids:
+            return exp_name, run_ids
+    raise ValueError(f"Run ID {run_id} does not belong to any experiment.")
+
+def get_train_runs(test_run: int) -> tuple[str, list[int]]:
+    """
+    Get the training runs for a given test run.
+    """
+    exp_name, run_ids = find_experiment_from_run(test_run)	
+    train_runs = [run_id for run_id in run_ids if run_id != test_run]
+    
+    return exp_name, train_runs
+
+def evaluate_held_out_run(subject_id: int, test_run: int) -> dict:
+    """
+    Evaluate the model on a held-out run.
+    Just handle one subject and one test run
+    """
+    exp_name, train_runs = get_train_runs(test_run)
+
+    X_train, y_train = preprocess_subject_runs(subject_id, train_runs)
+    X_test, y_test = preprocess_subject_runs(subject_id, [test_run])
+
+    pipeline = create_pipeline()
+    pipeline.fit(X_train, y_train)
+    accuracy = pipeline.score(X_test, y_test)
+
+    return {
+          "subject_id": subject_id, 
+          "test_run": test_run,
+            "accuracy": accuracy
+    }
+
+def evaluate_subject_experiment(subject_id: int):
+    """
+    Evaluate all runs of a subject for each experiment.
+    """
+    results = []
+    for exp_name, run_ids in EXPERIMENTS.items():
+        for test_run in run_ids:
+            result = evaluate_held_out_run(subject_id, test_run)
+            result["experiment"] = exp_name
+            results.append(result)
+    return results
+
+def evaluate_all_experiments():
+    """
+    Evaluate all subjects and all experiments.
+    """
+    all_results = []
+    for subject_id in range(1, 110):
+        subject_results = evaluate_subject_experiment(subject_id)
+        all_results.extend(subject_results)
+    return all_results
+
+def evaluate_cross_validation_baseline(
+		pipeline, 
+		run_ids: list[int],
+		subject_range=range(1, 110)
+):
 	"""
 	
 	Args:
