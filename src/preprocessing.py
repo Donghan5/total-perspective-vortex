@@ -2,9 +2,8 @@ from pathlib import Path
 
 import mne
 import numpy as np
-from sklearn.model_selection import cross_val_score
 
-PROJECT_ROOT = Path(__file__).parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 DATA_ROOT = PROJECT_ROOT / "physionet.org" / "files" / "eegmmidb" / "1.0.0"
 
 def build_edf_path(subject_id: int, run_id: int) -> Path:
@@ -113,8 +112,7 @@ def preprocess_subject_runs(subject_id: int, run_ids: list[int]):
 	
 	# loop (creation of path + preprocessing eeg data)
 	for run_id in run_ids:
-		path = f'../physionet.org/files/eegmmidb/1.0.0/S{subject_id:03d}/S{subject_id:03d}R{run_id:02d}.edf'
-		X, y = preprocess_eeg_data(path)
+		X, y = preprocess_eeg_data(subject_id, run_id)
 		X_list.append(X)
 		y_list.append(y)
 

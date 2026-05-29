@@ -1,115 +1,135 @@
 import numpy as np
 from sklearn.model_selection import cross_val_score
-from src.preprocessing import preprocess_subject_runs
+
 from src.pipeline import create_pipeline
+from src.preprocessing import preprocess_subject_runs
+
 
 EXPERIMENTS = {
-	"actual_left_vs_right_fist": [3, 7, 11],
-	"imagined_left_vs_right_fist": [4, 8, 12],
-	"actual_fists_vs_feet": [5, 9, 13],
-	"imagined_fists_vs_feet": [6, 10, 14],
+    "actual_left_vs_right_fist": [3, 7, 11],
+    "imagined_left_vs_right_fist": [4, 8, 12],
+    "actual_fists_vs_feet": [5, 9, 13],
+    "imagined_fists_vs_feet": [6, 10, 14],
 }
 
+
 def find_experiment_from_run(run_id: int) -> tuple[str, list[int]]:
-    for exp_name, run_ids in EXPERIMENTS.items():
+    for experiment_name, run_ids in EXPERIMENTS.items():
         if run_id in run_ids:
-            return exp_name, run_ids
+            return experiment_name, run_ids
+
     raise ValueError(f"Run ID {run_id} does not belong to any experiment.")
+
 
 def get_train_runs(test_run: int) -> tuple[str, list[int]]:
     """
-    Get the training runs for a given test run.
+    Return the experiment name and training runs after holding out one test run.
     """
-    exp_name, run_ids = find_experiment_from_run(test_run)	
+    experiment_name, run_ids = find_experiment_from_run(test_run)
     train_runs = [run_id for run_id in run_ids if run_id != test_run]
-    
-    return exp_name, train_runs
+
+    return experiment_name, train_runs
+
 
 def evaluate_held_out_run(subject_id: int, test_run: int) -> dict:
     """
-    Evaluate the model on a held-out run.
-    Just handle one subject and one test run
+    Evaluate one subject on one unseen held-out run.
     """
-    exp_name, train_runs = get_train_runs(test_run)
+    experiment_name, train_runs = get_train_runs(test_run)
 
     X_train, y_train = preprocess_subject_runs(subject_id, train_runs)
     X_test, y_test = preprocess_subject_runs(subject_id, [test_run])
 
     pipeline = create_pipeline()
     pipeline.fit(X_train, y_train)
-    accuracy = pipeline.score(X_test, y_test)
+
+    accuracy = float(pipeline.score(X_test, y_test))
 
     return {
-          "subject_id": subject_id, 
-          "test_run": test_run,
-            "accuracy": accuracy
+        "subject_id": subject_id,
+        "experiment": experiment_name,
+        "train_runs": train_runs,
+        "test_run": test_run,
+        "accuracy": accuracy,
     }
 
-def evaluate_subject_experiment(subject_id: int):
+
+def evaluate_subject_all_experiments(subject_id: int) -> list[dict]:
     """
-    Evaluate all runs of a subject for each experiment.
+    Evaluate one subject on every configured experiment and held-out run.
     """
     results = []
-    for exp_name, run_ids in EXPERIMENTS.items():
+
+    for run_ids in EXPERIMENTS.values():
         for test_run in run_ids:
-            result = evaluate_held_out_run(subject_id, test_run)
-            result["experiment"] = exp_name
-            results.append(result)
+            results.append(evaluate_held_out_run(subject_id, test_run))
+
     return results
 
-def evaluate_all_experiments():
+
+def evaluate_all_experiments(
+    subject_range=range(1, 110),
+) -> list[dict]:
     """
-    Evaluate all subjects and all experiments.
+    Evaluate all configured experiments for all requested subjects.
     """
     all_results = []
-    for subject_id in range(1, 110):
-        subject_results = evaluate_subject_experiment(subject_id)
-        all_results.extend(subject_results)
+
+    for subject_id in subject_range:
+        all_results.extend(evaluate_subject_all_experiments(subject_id))
+
     return all_results
 
+
 def evaluate_cross_validation_baseline(
-		pipeline, 
-		run_ids: list[int],
-		subject_range=range(1, 110)
-):
-	"""
-	
-	Args:
-		run_ids: motor imagery actual movement (eg: [3, 7, 11]) --> R03
+    pipeline,
+    run_ids: list[int],
+    subject_range=range(1, 110),
+) -> dict[int, float | None]:
+    """
+    Existing epoch-level cross-validation baseline.
+    This is not held-out run evaluation.
+    """
+    subject_ids = list(subject_range)
+    total_subjects = len(subject_ids)
+    mean_acc_dict = {}
 
-	Returns:
-		dict {subject_id: mean_accuracy}
-	"""
+    for subject_id in subject_ids:
+        try:
+            X, y = preprocess_subject_runs(subject_id, run_ids)
+            scores = cross_val_score(pipeline, X, y, cv=5)
 
-	# preparing dict to store mean accuracy
-	mean_acc_dict = {}
+            mean_accuracy = float(scores.mean())
+            mean_acc_dict[subject_id] = mean_accuracy
 
-	for subject_id in subject_range:
-		try:
-			X, y = preprocess_subject_runs(subject_id, run_ids)
-			scores = cross_val_score(pipeline, X, y, cv=5)
-			mean_acc_dict[subject_id] = scores.mean()
-			print(f"Subject {subject_id}: mean accuracy = {scores.mean():.3f}")
-		except Exception as e:
-			print(f"Subject {subject_id}: ERROR {e}")
-			mean_acc_dict[subject_id] = None
+            print(
+                f"Subject {subject_id:03d}: "
+                f"mean accuracy = {mean_accuracy:.3f}"
+            )
 
-	
-	# temporary feature
-	valid_scores = [s for s in mean_acc_dict.values() if s is not None]
+        except Exception as error:
+            print(f"Subject {subject_id:03d}: ERROR {error}")
+            mean_acc_dict[subject_id] = None
 
-	print(f"=== Evaluation Result ===")
-	print(f"subject evaluated: {len(valid_scores)}/109")
-	print(f"")
-	print(f"mean:    {np.mean(valid_scores):.4f}")
-	print(f"median:  {np.median(valid_scores):.4f}")
-	print(f"std: {np.std(valid_scores):.4f}")
-	print(f"min:    {np.min(valid_scores):.4f}")
-	print(f"max:    {np.max(valid_scores):.4f}")
-	print(f"")
-	print(f">= 60%: {sum(s >= 0.6 for s in valid_scores)}/109")
-	print(f">= 70%: {sum(s >= 0.7 for s in valid_scores)}/109")
-	print(f">= 80%: {sum(s >= 0.8 for s in valid_scores)}/109")
+    valid_scores = [
+        score for score in mean_acc_dict.values()
+        if score is not None
+    ]
 
+    if not valid_scores:
+        raise RuntimeError("No subject could be evaluated.")
 
-	return mean_acc_dict
+    print("=== Cross-Validation Baseline Result ===")
+    print(f"Subjects evaluated: {len(valid_scores)}/{total_subjects}")
+    print()
+    print(f"Mean:   {np.mean(valid_scores):.4f}")
+    print(f"Median: {np.median(valid_scores):.4f}")
+    print(f"Std:    {np.std(valid_scores):.4f}")
+    print(f"Min:    {np.min(valid_scores):.4f}")
+    print(f"Max:    {np.max(valid_scores):.4f}")
+    print()
+    print(f">= 60%: {sum(score >= 0.6 for score in valid_scores)}/{total_subjects}")
+    print(f">= 70%: {sum(score >= 0.7 for score in valid_scores)}/{total_subjects}")
+    print(f">= 80%: {sum(score >= 0.8 for score in valid_scores)}/{total_subjects}")
+
+    return mean_acc_dict
