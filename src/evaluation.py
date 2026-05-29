@@ -69,18 +69,145 @@ def evaluate_subject_all_experiments(subject_id: int) -> list[dict]:
 
 def evaluate_all_experiments(
     subject_range=range(1, 110),
-) -> list[dict]:
+) -> tuple[list[dict], list[dict]]:
     """
     Evaluate all configured experiments for all requested subjects.
+
+    Returns
+    -------
+    results : list[dict]
+        Successful held-out evaluation results.
+    errors : list[dict]
+        Failed subject/run evaluations with their error messages.
     """
-    all_results = []
+    results = []
+    errors = []
 
     for subject_id in subject_range:
-        all_results.extend(evaluate_subject_all_experiments(subject_id))
+        for experiment_name, run_ids in EXPERIMENTS.items():
+            for test_run in run_ids:
+                try:
+                    result = evaluate_held_out_run(subject_id, test_run)
+                    results.append(result)
 
-    return all_results
+                except Exception as error:
+                    errors.append({
+                        "subject_id": subject_id,
+                        "experiment": experiment_name,
+                        "test_run": test_run,
+                        "error": str(error),
+                    })
+
+                    print(
+                        f"ERROR | subject={subject_id:03d} | "
+                        f"experiment={experiment_name} | "
+                        f"test_run=R{test_run:02d} | "
+                        f"{error}"
+                    )
+
+    return results, errors
 
 
+def summerize_experiment_results(
+        results: list[dict],
+        errors: list[dict] | None = None
+) -> dict:
+    """
+    Aggregate held-out test accuracies per experiment and overall.
+    """
+    if error is None:
+        error = []
+    
+    scores_by_experiment = {
+        experiment_name: []
+        for experiment_name in EXPERIMENTS
+    }
+
+    for result in results:
+        experiment_name = result["experiment"]
+        accuracy = result["accuracy"]
+        scores_by_experiment[experiment_name].append(accuracy)
+    
+    experiment_summeries = {}
+
+    for experiment_name, scores in scores_by_experiment.items():
+        if scores:
+            experiment_summeries[experiment_name] = {
+                "n_scores": len(scores),
+                "mean": np.mean(scores),
+                "median": np.median(scores),
+                "std": np.std(scores),
+                "min": np.min(scores),
+                "max": np.max(scores),
+                "num_subjects": len(scores),
+            }
+        else:
+            experiment_summeries[experiment_name] = {
+                "n_scores": 0,
+                "mean": None,
+                "median": None,
+                "std": None,
+                "min": None,
+                "max": None,
+                "num_subjects": 0,
+            }
+    all_scores = float(result["accuracy"] for result in results)
+
+    overall = {
+        "n_scores": len(all_scores),
+        "mean": np.mean(all_scores) if all_scores else None,
+        "median": np.median(all_scores) if all_scores else None,
+        "std": np.std(all_scores) if all_scores else None,
+        "min": np.min(all_scores) if all_scores else None,
+        "max": np.max(all_scores) if all_scores else None,
+        "num_subjects": len(all_scores),
+        "n_errors": len(errors),
+    }
+
+    return {
+        "experiments": experiment_summeries,
+        "overall": overall,
+        "errors": errors,
+    }
+
+def print_experiment_summary(summary: dict) -> None:
+    """
+    Print held-out evaluation summaries.
+    """
+    print("=== Held-Out Run Evaluation Result ===")
+
+    for experiment_name, metrics in summary["experiments"].items():
+        if metrics["mean_accuracy"] is None:
+            print(f"{experiment_name}: no valid results")
+            continue
+
+        print(
+            f"{experiment_name}: "
+            f"mean={metrics['mean_accuracy']:.4f}, "
+            f"std={metrics['std_accuracy']:.4f}, "
+            f"min={metrics['min_accuracy']:.4f}, "
+            f"max={metrics['max_accuracy']:.4f}, "
+            f"n={metrics['n_scores']}"
+        )
+
+    overall = summary["overall"]
+
+    print()
+    print("=== Overall Held-Out Result ===")
+
+    if overall["mean_accuracy"] is None:
+        print("No valid evaluation results.")
+        return
+
+    print(f"mean:   {overall['mean_accuracy']:.4f}")
+    print(f"median: {overall['median_accuracy']:.4f}")
+    print(f"std:    {overall['std_accuracy']:.4f}")
+    print(f"min:    {overall['min_accuracy']:.4f}")
+    print(f"max:    {overall['max_accuracy']:.4f}")
+    print(f"scores: {overall['n_scores']}")
+    print(f"errors: {overall['n_errors']}")
+
+    
 def evaluate_cross_validation_baseline(
     pipeline,
     run_ids: list[int],
