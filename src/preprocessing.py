@@ -2,7 +2,7 @@ from pathlib import Path
 
 import mne
 import numpy as np
-from sklearn.model_selection import cross_val_score
+from src.evaluation import evaluate_held_out_run
 
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_ROOT = PROJECT_ROOT / "physionet.org" / "files" / "eegmmidb" / "1.0.0"
@@ -97,7 +97,10 @@ def preprocess_eeg_data(subject_id: int, run_id: int) -> tuple[np.ndarray, np.nd
 	raw_filtered = filter_raw_eeg(raw)
 	return extract_epochs(raw_filtered)
 
-def preprocess_subject_runs(subject_id: int, run_ids: list[int]):
+def preprocess_subject_runs(
+		subject_id: int,
+		run_ids: list[int]
+	) -> tuple[np.ndarray, np.ndarray]:
 	"""
 		Args:
 			subject_id: 1 to 109
@@ -120,9 +123,33 @@ def preprocess_subject_runs(subject_id: int, run_ids: list[int]):
 
 	# concatenating all X and y
 	X = np.concatenate(X_list, axis=0)
-	y = np.concatenate(y_list)
+	y = np.concatenate(y_list, axis=0)
 
 	return X, y
 
 
-	
+def evaluate_all_experiments(
+		subject_range=range(1, 110),
+) -> tuple[list[dict], list[dict]]:
+	"""
+	Args:
+	- subject_range: Range of subject IDs to evaluate.
+
+	Evaluate all experiments and reutrn the results as a list of a dictionary	
+	"""
+
+	results, errors = []
+
+	for subject_id in subject_range:
+		for experiment_name, run_ids in EXPERIMENTS.items():
+			for test_run in run_ids:
+				try:
+					results.append(evaluate_held_out_run(subject_id, run_ids, test_run))
+				except Exception as error:
+					errors.append({
+						"subject_id": subject_id,
+						"experiment_name": experiment_name,
+						"test_run": test_run,
+						"error": str(error)
+					})
+	return results, errors
