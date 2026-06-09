@@ -57,16 +57,6 @@ def evaluate_subject_experiment(subject_id: int):
             results.append(result)
     return results
 
-def evaluate_all_experiments():
-    """
-    Evaluate all subjects and all experiments.
-    """
-    all_results = []
-    for subject_id in range(1, 110):
-        subject_results = evaluate_subject_experiment(subject_id)
-        all_results.extend(subject_results)
-    return all_results
-
 
 def evaluate_all_experiments(
 		subject_range=range(1, 110),

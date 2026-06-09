@@ -17,8 +17,6 @@ MODEL_DIR = Path("models")
 from src.evaluation import (
     evaluate_all_experiments,
     get_train_runs,
-    print_experiment_results,
-    summarize_experiment_results
 )
 
 def parse_args() -> argparse.Namespace:
@@ -129,8 +127,28 @@ def run_full_evaluation() -> None:
     Run the full evaluation for all subjects and test runs.
     """
     results, errors = evaluate_all_experiments()
-    summary = summarize_experiment_results(results, errors)
-    print_experiment_results(summary)
+
+    print("=== Evaluation Summary ===")
+    print(f"Successful evaluations: {len(results)}")
+    print(f"Errored evaluations: {len(errors)}")
+
+    if results:
+        accuracies = [r["accuracy"] for r in results]
+        print(f"Mean accuracy: {np.mean(accuracies):.4f}")
+        print(f"Median accuracy: {np.median(accuracies):.4f}")
+        print(f"Standard deviation: {np.std(accuracies):.4f}")
+        print(f"Minimum accuracy: {np.min(accuracies):.4f}")
+        print(f"Maximum accuracy: {np.max(accuracies):.4f}")
+
+    if errors:
+        print("\n=== First Errors ===")
+        for error in errors[:10]:
+            print(
+                f"Subject S{error['subject_id']:03d}, "
+                f"Experiment: {error['experiment_name']}, "
+                f"Test run: R{error['test_run']:02d}, "
+                f"Error: {error['error']}"
+            )
 
 def main() -> None:
     args = parse_args()
