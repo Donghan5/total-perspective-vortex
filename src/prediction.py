@@ -1,6 +1,7 @@
 import time
 import joblib
 from sklearn.metrics import accuracy_score
+from src.playback import playback_epochs
 from src.preprocessing import preprocess_subject_runs
 from utils import get_model_path
 import numpy as np
@@ -43,18 +44,7 @@ def predict_stream(subject_id: int, test_run: int) -> None:
     X_test, y_test = preprocess_subject_runs(subject_id, [test_run])
 
     # Predict epoch by epoch
-    predictions, latencies = [], []
-
-    # Measure latency for each epoch
-    for epoch, truth in zip(X_test, y_test):
-        chunk = epoch[np.newaxis, ...]  # Add batch dimension
-
-        start = time.perf_counter()
-        pred = pipeline.predict(chunk)[0]
-        elapsed = time.perf_counter() - start
-
-        predictions.append(pred)
-        latencies.append(elapsed)
+    predictions, latencies = playback_epochs(X_test, pipeline)
 
     # Calculate accuracy and average latency
     accuracy = accuracy_score(y_test, predictions)
