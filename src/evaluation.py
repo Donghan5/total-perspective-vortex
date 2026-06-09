@@ -84,7 +84,7 @@ def evaluate_all_experiments(
 		for experiment_name, run_ids in EXPERIMENTS.items():
 			for test_run in run_ids:
 				try:
-					results.append(evaluate_held_out_run(subject_id, run_ids, test_run))
+					results.append(evaluate_held_out_run(subject_id, test_run))
 				except Exception as error:
 					errors.append({
 						"subject_id": subject_id,
