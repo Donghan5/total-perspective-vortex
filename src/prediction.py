@@ -13,9 +13,9 @@ def print_prediction_results(
     Following the format from subject:
     epoch nb: [prediction] [truth] equal (boolean type)
     """
+    print("Epoch nb: [prediction] [truth] equal?")
     for i, (pred, truth) in enumerate(zip(predictions, y_test)):
-        equal = pred == truth
-        print(f"Epoch {i+1:02d}: Prediction: {pred} | Truth: {truth} | Equal: {equal}")
+        print(f"Epoch {i+1:02d}: [{pred}] [{truth}] {pred == truth}")
 
 
 def predict_stream(subject_id: int, test_run: int) -> None:
@@ -63,3 +63,8 @@ def predict_stream(subject_id: int, test_run: int) -> None:
 
     # Print final accuracy and max latency
     print_prediction_results(predictions, y_test)
+
+    print(f"\nAccuracy: {accuracy:.4f}")
+    print(f"Average Latency per Epoch: {avg_latency:.4f} seconds")
+    print(f"Maximum Latency for any Epoch: {max_latency:.4f} seconds")
+    print(f"2s latency constraint satisfied: {max_latency < 2.0}")

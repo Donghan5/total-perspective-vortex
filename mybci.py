@@ -9,6 +9,9 @@ from sklearn.metrics import accuracy_score
 from src.preprocessing import preprocess_subject_runs
 from src.pipeline import create_pipeline
 
+from src.prediction import predict_stream
+from src.utils import get_model_path
+
 # Define constants
 
 from src.evaluation import (
