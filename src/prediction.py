@@ -3,7 +3,7 @@ import joblib
 from sklearn.metrics import accuracy_score
 from src.playback import playback_epochs
 from src.preprocessing import preprocess_subject_runs
-from utils import get_model_path
+from src.utils import get_model_path
 import numpy as np
 
 def print_prediction_results(

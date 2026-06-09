@@ -17,13 +17,13 @@ def find_experiment_from_run(run_id: int) -> tuple[str, list[int]]:
     raise ValueError(f"Run ID {run_id} does not belong to any experiment.")
 
 def get_train_runs(test_run: int) -> tuple[str, list[int]]:
-    """
-    Get the training runs for a given test run.
-    """
-    exp_name, run_ids = find_experiment_from_run(test_run)	
-    train_runs = [run_id for run_id in run_ids if run_id != test_run]
+	"""
+	Get the training runs for a given test run.
+	"""
+	exp_name, run_ids = find_experiment_from_run(test_run)
+	train_runs = [run_id for run_id in run_ids if run_id != test_run]
     
-    return exp_name, train_runs
+	return exp_name, train_runs
 
 def evaluate_held_out_run(subject_id: int, test_run: int) -> dict:
     """
@@ -40,59 +40,61 @@ def evaluate_held_out_run(subject_id: int, test_run: int) -> dict:
     accuracy = pipeline.score(X_test, y_test)
 
     return {
-          "subject_id": subject_id, 
-          "test_run": test_run,
-            "accuracy": accuracy
+        "subject_id": subject_id, 
+        "test_run": test_run,
+        "experiment_name": exp_name,
+        "accuracy": accuracy
     }
 
-def evaluate_subject_experiment(subject_id: int):
+def evaluate_subject_experiment(subject_id: int) -> tuple[list[dict], list[dict]]:
     """
     Evaluate all runs of a subject for each experiment.
     """
-    results = []
+    results, errors = [], []
     for exp_name, run_ids in EXPERIMENTS.items():
         for test_run in run_ids:
-            result = evaluate_held_out_run(subject_id, test_run)
-            result["experiment"] = exp_name
-            results.append(result)
-    return results
+            try:
+                result = evaluate_held_out_run(subject_id, test_run)
+                result["experiment"] = exp_name
+                results.append(result)
+            except Exception as error:
+                errors.append({
+                    "subject_id": subject_id,
+                    "experiment_name": exp_name,
+                    "test_run": test_run,
+                    "error": str(error)
+                })
+    return results, errors
 
 
 def evaluate_all_experiments(
-		subject_range=range(1, 110),
+	subject_range=range(1, 110),
 ) -> tuple[list[dict], list[dict]]:
 	"""
 	Args:
 	- subject_range: Range of subject IDs to evaluate.
 
-	Evaluate all experiments and reutrn the results as a list of a dictionary	
+	Evaluate all experiments and reutrn the results as a list of a dictionary
 	"""
 
-	results, errors = []
+	results, errors = [], []
 
 	for subject_id in subject_range:
-		for experiment_name, run_ids in EXPERIMENTS.items():
-			for test_run in run_ids:
-				try:
-					results.append(evaluate_held_out_run(subject_id, test_run))
-				except Exception as error:
-					errors.append({
-						"subject_id": subject_id,
-						"experiment_name": experiment_name,
-						"test_run": test_run,
-						"error": str(error)
-					})
+		subject_results, subject_errors = evaluate_subject_experiment(subject_id)
+		results.extend(subject_results)
+		errors.extend(subject_errors)
+            
 	return results, errors
 
 def evaluate_cross_validation_baseline(
-		pipeline, 
-		run_ids: list[int],
-		subject_range=range(1, 110)
+	pipeline,
+	run_ids: list[int],
+	subject_range=range(1, 110)
 ):
 	"""
-	
+    
 	Args:
-		run_ids: motor imagery actual movement (eg: [3, 7, 11]) --> R03
+		 run_ids: motor imagery actual movement (eg: [3, 7, 11]) --> R03
 
 	Returns:
 		dict {subject_id: mean_accuracy}
@@ -111,7 +113,7 @@ def evaluate_cross_validation_baseline(
 			print(f"Subject {subject_id}: ERROR {e}")
 			mean_acc_dict[subject_id] = None
 
-	
+    
 	# temporary feature
 	valid_scores = [s for s in mean_acc_dict.values() if s is not None]
 

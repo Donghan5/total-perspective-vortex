@@ -4,7 +4,6 @@ import argparse
 import joblib
 import numpy as np
 from sklearn.model_selection import cross_val_score
-from sklearn.metrics import accuracy_score
 
 from src.preprocessing import preprocess_subject_runs
 from src.pipeline import create_pipeline
