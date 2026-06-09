@@ -1,7 +1,5 @@
 # Import necessary libraries
 import argparse
-from pathlib import Path
-import time
 
 import joblib
 import numpy as np
@@ -12,7 +10,6 @@ from src.preprocessing import preprocess_subject_runs
 from src.pipeline import create_pipeline
 
 # Define constants
-MODEL_DIR = Path("models")
 
 from src.evaluation import (
     evaluate_all_experiments,
@@ -29,10 +26,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("mode", choices=["train", "predict", "evaluate"], nargs="?")
     
     return parser.parse_args()
-
-def get_model_path(subject_id: int, test_run: int) -> Path:
-    MODEL_DIR.mkdir(exist_ok=True)
-    return MODEL_DIR / f"S{subject_id:03d}_R{test_run:02d}_pipeline.joblib"
 
 
 def train_model(subject_id: int, test_run: int) -> None:
@@ -72,55 +65,7 @@ def train_model(subject_id: int, test_run: int) -> None:
     print(f"Mean CV Score: {np.mean(scores):.4f}")
     print(f"Model saved to: {model_path}")
 
-def predict_stream(subject_id: int, test_run: int) -> None:
-    """
-    Predict the labels for the test run using the trained model.
-    """
 
-    # Load the trained model
-    model_path = get_model_path(subject_id, test_run)
-
-    if not model_path.exists():
-        raise FileNotFoundError(f"Model not found at {model_path}. Please train the model first.")
-    
-    # Load the trained model artifact
-    artifact = joblib.load(model_path)
-
-    # checking the metadata of the loaded artifact
-    if artifact["subject_id"] != subject_id or artifact["test_run"] != test_run:
-        raise ValueError(f"Loaded model metadata does not match the requestted subject_id {subject_id} and test_run {test_run}.")
-    
-    # Extract the pipeline from the artifact
-    pipeline = artifact["pipeline"]
-
-    # Load only the test run data
-    X_test, y_test = preprocess_subject_runs(subject_id, [test_run])
-
-    # Predict epoch by epoch
-    predictions, latencies = [], []
-
-    # Measure latency for each epoch
-    for epoch, truth in zip(X_test, y_test):
-        chunk = epoch[np.newaxis, ...]  # Add batch dimension
-
-        start = time.perf_counter()
-        pred = pipeline.predict(chunk)[0]
-        elapsed = time.perf_counter() - start
-
-        predictions.append(pred)
-        latencies.append(elapsed)
-
-    # Calculate accuracy and average latency
-    accuracy = accuracy_score(y_test, predictions)
-    avg_latency = np.mean(latencies)
-    max_latency = np.max(latencies)
-
-    # Print final accuracy and max latency
-    print(f"Subject: S{subject_id:03d}")
-    print(f"Test run: R{test_run:02d}")
-    print(f"Accuracy: {accuracy:.4f}")
-    print(f"Average latency per epoch: {avg_latency:.4f} seconds")
-    print(f"Maximum latency for any epoch: {max_latency:.4f} seconds")
     
 def run_full_evaluation() -> None:
     """
