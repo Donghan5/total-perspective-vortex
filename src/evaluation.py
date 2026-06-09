@@ -67,6 +67,33 @@ def evaluate_all_experiments():
         all_results.extend(subject_results)
     return all_results
 
+
+def evaluate_all_experiments(
+		subject_range=range(1, 110),
+) -> tuple[list[dict], list[dict]]:
+	"""
+	Args:
+	- subject_range: Range of subject IDs to evaluate.
+
+	Evaluate all experiments and reutrn the results as a list of a dictionary	
+	"""
+
+	results, errors = []
+
+	for subject_id in subject_range:
+		for experiment_name, run_ids in EXPERIMENTS.items():
+			for test_run in run_ids:
+				try:
+					results.append(evaluate_held_out_run(subject_id, run_ids, test_run))
+				except Exception as error:
+					errors.append({
+						"subject_id": subject_id,
+						"experiment_name": experiment_name,
+						"test_run": test_run,
+						"error": str(error)
+					})
+	return results, errors
+
 def evaluate_cross_validation_baseline(
 		pipeline, 
 		run_ids: list[int],
