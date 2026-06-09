@@ -74,7 +74,7 @@ def evaluate_all_experiments(
 	Args:
 	- subject_range: Range of subject IDs to evaluate.
 
-	Evaluate all experiments and reutrn the results as a list of a dictionary
+	Evaluate all experiments and return the results as a list of a dictionary
 	"""
 
 	results, errors = [], []
