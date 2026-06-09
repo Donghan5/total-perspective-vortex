@@ -16,7 +16,7 @@ def print_prediction_results(
     """
     print("Epoch nb: [prediction] [truth] equal?")
     for i, (pred, truth) in enumerate(zip(predictions, y_test)):
-        print(f"Epoch {i+1:02d}: [{pred}] [{truth}] {pred == truth}")
+        print(f"Epoch {i:02d}: [{pred}] [{truth}] {pred == truth}")
 
 
 def predict_stream(subject_id: int, test_run: int) -> None:
@@ -35,7 +35,7 @@ def predict_stream(subject_id: int, test_run: int) -> None:
 
     # checking the metadata of the loaded artifact
     if artifact["subject_id"] != subject_id or artifact["test_run"] != test_run:
-        raise ValueError(f"Loaded model metadata does not match the requestted subject_id {subject_id} and test_run {test_run}.")
+        raise ValueError(f"Loaded model metadata does not match the requested subject_id {subject_id} and test_run {test_run}.")
     
     # Extract the pipeline from the artifact
     pipeline = artifact["pipeline"]
