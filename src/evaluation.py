@@ -55,7 +55,6 @@ def evaluate_subject_experiment(subject_id: int) -> tuple[list[dict], list[dict]
         for test_run in run_ids:
             try:
                 result = evaluate_held_out_run(subject_id, test_run)
-                result["experiment"] = exp_name
                 results.append(result)
             except Exception as error:
                 errors.append({
