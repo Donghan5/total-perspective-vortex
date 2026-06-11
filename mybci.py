@@ -67,14 +67,10 @@ def train_model(subject_id: int, test_run: int) -> None:
     print(f"Mean CV Score: {np.mean(scores):.4f}")
     print(f"Model saved to: {model_path}")
 
-
-    
-def run_full_evaluation() -> None:
+def print_evaluation_summary(results: list[dict], errors: list[dict]) -> None:
     """
-    Run the full evaluation for all subjects and test runs.
+    Helper function to print the evaluation summary in a readable format.
     """
-    results, errors = evaluate_all_experiments()
-
     print("=== Evaluation Summary ===")
     print(f"Successful evaluations: {len(results)}")
     print(f"Errored evaluations: {len(errors)}")
@@ -87,6 +83,15 @@ def run_full_evaluation() -> None:
         print(f"Minimum accuracy: {np.min(accuracies):.4f}")
         print(f"Maximum accuracy: {np.max(accuracies):.4f}")
 
+        print("\n=== Mean accuracy by experiment ===")
+        experiment_names = sorted(set(r["experiment_name"] for r in results))
+        for exp_name in experiment_names:
+            scores = [
+                r["accuracy"] for r in results
+                if r["experiment_name"] == exp_name
+            ]
+            print(f"  {exp_name}: mean accuracy = {np.mean(scores):.4f}")
+
     if errors:
         print("\n=== First Errors ===")
         for error in errors[:10]:
@@ -96,6 +101,14 @@ def run_full_evaluation() -> None:
                 f"Test run: R{error['test_run']:02d}, "
                 f"Error: {error['error']}"
             )
+
+    
+def run_full_evaluation() -> None:
+    """
+    Run the full evaluation for all subjects and test runs.
+    """
+    results, errors = evaluate_all_experiments()
+    print_evaluation_summary(results, errors)
 
 def main() -> None:
     args = parse_args()
@@ -111,9 +124,10 @@ def main() -> None:
     if args.subject_id is None or args.run_id is None or args.mode is None:
         raise SystemExit(
             "Usage:\n"
-            "   python mybci.py <subject_id> <held_out_run> <mode> (train, predict)\n"
-            "   python mybci.py\n"
+            "   python mybci.py <subject_id> <held_out_run> train\n"
+            "   python mybci.py <subject_id> <held_out_run> predict\n"
             "   python mybci.py evaluate\n\n"
+            "   python mybci.py\n"
         )
 
     # Mode selecting
