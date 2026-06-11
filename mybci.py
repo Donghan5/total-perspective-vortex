@@ -11,8 +11,6 @@ from src.pipeline import create_pipeline
 from src.prediction import predict_stream
 from src.utils import get_model_path
 
-# Define constants
-
 from src.evaluation import (
     evaluate_all_experiments,
     get_train_runs,
@@ -25,7 +23,7 @@ def parse_args() -> argparse.Namespace:
 
     parser.add_argument("subject_id", type=int, help="Subject ID (1 to 109)", nargs="?")
     parser.add_argument("run_id", type=int, help="Run ID (3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, or 14)", nargs="?")
-    parser.add_argument("mode", choices=["train", "predict", "evaluate"], nargs="?")
+    parser.add_argument("mode", choices=["train", "predict"], nargs="?")
     
     return parser.parse_args()
 
@@ -117,16 +115,11 @@ def main() -> None:
         run_full_evaluation()
         return
 
-    if args.mode == "evaluate" and args.subject_id is None and args.run_id is None:
-        run_full_evaluation()
-        return
-
     if args.subject_id is None or args.run_id is None or args.mode is None:
         raise SystemExit(
             "Usage:\n"
             "   python mybci.py <subject_id> <held_out_run> train\n"
             "   python mybci.py <subject_id> <held_out_run> predict\n"
-            "   python mybci.py evaluate\n\n"
             "   python mybci.py\n"
         )
 
@@ -135,8 +128,6 @@ def main() -> None:
         train_model(args.subject_id, args.run_id)
     elif args.mode == "predict":
         predict_stream(args.subject_id, args.run_id)
-    elif args.mode == "evaluate":
-        run_full_evaluation()
 
 if __name__ == "__main__":
     main()
