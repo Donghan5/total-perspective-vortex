@@ -85,6 +85,7 @@ def evaluate_all_experiments(
             
 	return results, errors
 
+# explotray baseline evaluation using cross validation on all runs of an experiment (in notebook files)
 def evaluate_cross_validation_baseline(
 	pipeline,
 	run_ids: list[int],
