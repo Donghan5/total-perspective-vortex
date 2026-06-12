@@ -17,6 +17,7 @@ class CSP(BaseEstimator, TransformerMixin):
 	def __init__(self, n_components=4, eps=1e-10, reg=0.0):
 		self.n_components = n_components
 		self.eps = eps
+		self.reg = reg
 
 	def fit(self, X, y):
 		"""
