@@ -64,3 +64,5 @@ class CSP(BaseEstimator, TransformerMixin):
 		scale = np.trace(cov) / n_channels
 		reg_cov = cov + self.reg * scale * np.eye(n_channels)
 
+		return reg_cov
+
