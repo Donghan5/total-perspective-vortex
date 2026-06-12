@@ -14,7 +14,7 @@ from scipy.linalg import eigh
 import mne
 
 class CSP(BaseEstimator, TransformerMixin):
-	def __init__(self, n_components=4, eps=1e-10):
+	def __init__(self, n_components=4, eps=1e-10, reg=0.0):
 		self.n_components = n_components
 		self.eps = eps
 
@@ -28,6 +28,9 @@ class CSP(BaseEstimator, TransformerMixin):
 
 		X_class1 = X [y == 1]
 		cov_1 = np.mean([np.cov(epoch) for epoch in X_class1], axis=0)
+
+		cov_0 = self.regularize_covariance(cov_0)
+		cov_1 = self.regularize_covariance(cov_1)
 
 		# Genealized eigenvalue problem
 		eigenvalues, eigenvectors = eigh(cov_0, cov_0 + cov_1)
@@ -48,3 +51,15 @@ class CSP(BaseEstimator, TransformerMixin):
 		
 		features = np.log(np.var(X_csp, axis=2) + self.eps)
 		return features
+	
+	def regularize_covariance(self, cov: np.ndarray) -> np.ndarray:
+		"""
+			Regularize covariance matrix to ensure numerical stability.
+		"""
+		if self.reg <= 0:
+			return cov
+		
+		n_channels = cov.shape[0]
+		scale = np.trace(cov) / n_channels
+		reg_cov = cov + self.reg * scale * np.eye(n_channels)
+
