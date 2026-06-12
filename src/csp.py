@@ -23,6 +23,10 @@ class CSP(BaseEstimator, TransformerMixin):
 		"""
 			Weight fitting
 		"""
+		# checking input dimensions
+		if len(np.unique(y)) != 2:
+			raise ValueError("CSP only supports binary classification.")
+
 		# Calculate cov of each class
 		X_class0 = X [y == 0]
 		cov_0 = np.mean([np.cov(epoch) for epoch in X_class0], axis=0)
