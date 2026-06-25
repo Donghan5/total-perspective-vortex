@@ -28,7 +28,7 @@ def frequency_to_scale(
     if sampling_frequency <= 0:
         raise ValueError("Sampling frequency must be positive.")
     
-    return (w0 ** sampling_frequency) / (2 * np.pi * frequency)
+    return (w0 * sampling_frequency) / (2 * np.pi * frequency)
 
 def morlet_wavelet_for_frequency(
         frequency: float,
