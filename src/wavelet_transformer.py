@@ -22,6 +22,9 @@ class MorletWaveletTransformer(BaseEstimator, TransformerMixin):
         self.eps = eps
 
     def fit(self, X, y=None):
+        """
+        Validate the input data and initialize the frequency grid used for wavelet feature extraction.
+        """
         X = np.asarray(X)
 
         if X.ndim != 3:
@@ -42,6 +45,11 @@ class MorletWaveletTransformer(BaseEstimator, TransformerMixin):
         return self
     
     def transform(self, X):
+        """
+        Extract Morlet wavelet band-power features from EEG epochs.
+        """
+        X = np.asarray(X, dtype=float)
+
         if not hasattr(self, 'freqs_'):
             raise RuntimeError("The transformer has not been fitted yet. Call 'fit' before 'transform'.")
         
