@@ -119,7 +119,7 @@ def band_power_features(
         bands = [
             ("mu", 8.0, 13.0),
             ("low_beta", 13.0, 20.0),
-            ("high_beta", 20.0, 30.0),
+            ("high_beta", 20.0, 31.0),
         ]
 
     features = []

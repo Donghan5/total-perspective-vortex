@@ -33,11 +33,21 @@ class MorletWaveletTransformer(BaseEstimator, TransformerMixin):
             else np.arange(8.0, 31.0, 1.0)  # Default frequencies from 8 to 30 Hz
         )
 
+        if np.any(self.freqs_ <= 0):
+            raise ValueError("Frequencies must be positive.")
+        
+        if self.freqs_.ndim != 1:
+            raise ValueError("Frequencies must be a 1D array.")
+
         return self
     
     def transform(self, X):
         if not hasattr(self, 'freqs_'):
             raise RuntimeError("The transformer has not been fitted yet. Call 'fit' before 'transform'.")
+        
+        if X.ndim != 3:
+            raise ValueError("Input data must be a 3D array (epochs x channels x time).")
+        
         return wavelet_features_epochs(
             epochs=X,
             freqs=self.freqs_,
