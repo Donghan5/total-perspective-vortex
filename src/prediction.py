@@ -19,13 +19,13 @@ def print_prediction_results(
         print(f"Epoch {i:02d}: [{pred}] [{truth}] {pred == truth}")
 
 
-def predict_stream(subject_id: int, test_run: int) -> None:
+def predict_stream(subject_id: int, test_run: int, pipeline_name: str = "csp") -> None:
     """
     Predict the labels for the test run using the trained model.
     """
 
     # Load the trained model
-    model_path = get_model_path(subject_id, test_run)
+    model_path = get_model_path(subject_id, test_run, pipeline_name)
 
     if not model_path.exists():
         raise FileNotFoundError(f"Model not found at {model_path}. Please train the model first.")
@@ -34,11 +34,14 @@ def predict_stream(subject_id: int, test_run: int) -> None:
     artifact = joblib.load(model_path)
 
     # checking the metadata of the loaded artifact
-    if artifact["subject_id"] != subject_id or artifact["test_run"] != test_run:
-        raise ValueError(f"Loaded model metadata does not match the requested subject_id {subject_id} and test_run {test_run}.")
+    if artifact["subject_id"] != subject_id or artifact["test_run"] != test_run or artifact["pipeline_name"] != pipeline_name:
+        raise ValueError(f"Loaded model metadata does not match the requested subject_id {subject_id}, test_run {test_run}, and pipeline_name {pipeline_name}.")
     
     # Extract the pipeline from the artifact
     pipeline = artifact["pipeline"]
+
+    if artifact.get("pipeline_name") != pipeline_name:
+        raise ValueError(f"Loaded model pipeline name does not match the requested pipeline_name {pipeline_name}.")
 
     # Load only the test run data
     X_test, y_test = preprocess_subject_runs(subject_id, [test_run])

@@ -71,7 +71,7 @@ def train_model(subject_id: int, test_run: int, pipeline_name: str = "csp") -> N
         "test_run": test_run
     }
 
-    model_path = get_model_path(subject_id, test_run)
+    model_path = get_model_path(subject_id, test_run, pipeline_name)
     joblib.dump(artifact, model_path)
 
     print(f"Experiment: {experiment_name}")
@@ -145,7 +145,7 @@ def main() -> None:
     if args.mode == "train":
         train_model(args.subject_id, args.run_id, args.pipeline)
     elif args.mode == "predict":
-        predict_stream(args.subject_id, args.run_id)
+        predict_stream(args.subject_id, args.run_id, args.pipeline)
 
 if __name__ == "__main__":
     main()
