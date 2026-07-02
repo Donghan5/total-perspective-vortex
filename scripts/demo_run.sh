@@ -13,12 +13,12 @@ PIPELINE_MODE="${3:-all}"
 LOG_DIR="logs"
 mkdir -p "$LOG_DIR"
 
-if [[ -x ".venv/bin/activate" ]]; then
-    source ".venv/bin/activate"
-else
+if [[ -z "${VIRTUAL_ENV}" ]]; then
     echo "Virtual environment not found. Please set up the virtual environment first."
     exit 1
 fi
+
+PYTHON_BIN="${VIRTUAL_ENV}/bin/python"
 
 echo "=============================================================="
 echo "Total Perspective Vortex - Demo Run"
