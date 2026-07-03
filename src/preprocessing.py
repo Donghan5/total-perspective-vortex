@@ -110,7 +110,6 @@ def preprocess_subject_runs(
 			y: Tuples of y. (total_epochs,)
 	"""
 
-	# preparing list to store X and y (which will contain 50 epochs)
 	X_list, y_list = [], []
 	
 	# loop (creation of path + preprocessing eeg data)
