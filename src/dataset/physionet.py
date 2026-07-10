@@ -1,7 +1,7 @@
 import numpy as np
 
 from src.dataset.base import EEGDataset
-from src.preprocessing import preprocess_eeg_data, load_raw_eeg
+from src.preprocessing import extract_epochs, filter_raw_eeg, load_raw_eeg
 
 def load_physionet_epochs(
         subject_id: int,
@@ -15,16 +15,17 @@ def load_physionet_epochs(
     for run_id in run_ids:
         raw = load_raw_eeg(subject_id, run_id)
         if ch_names is None:
-            ch_names = raw.ch_names
-            sfreq = raw.info["sfreq"]
+            ch_names = list(raw.ch_names)
+            sfreq = float(raw.info["sfreq"])
 
-        X_run, y_run = preprocess_eeg_data(raw)
+        raw_filtered = filter_raw_eeg(raw)
+        X_run, y_run = extract_epochs(raw_filtered)
         X_list.append(X_run)
         y_list.append(y_run)
-        groups.append(np.full(y_run.shape, run_id))
+        groups.extend([run_id] * len(y_run))
 
-    X = np.concatenate(X_list)
-    y = np.concatenate(y_list)
+    X = np.concatenate(X_list, axis=0)
+    y = np.concatenate(y_list, axis=0)
     groups = np.asarray(groups)
 
     return EEGDataset(
@@ -32,6 +33,8 @@ def load_physionet_epochs(
         y=y,
         sfreq=sfreq,
         ch_names=ch_names,
+        subject_id=subject_id,
+        run_ids=run_ids,
         groups=groups,
         task_name=task_name
     )
