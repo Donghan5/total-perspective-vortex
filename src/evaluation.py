@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.model_selection import cross_val_score
 from src.preprocessing import preprocess_subject_runs
-from src.pipeline import create_pipeline
+from src.pipeline.pipeline import create_pipeline
 
 EXPERIMENTS = {
 	"actual_left_vs_right_fist": [3, 7, 11],
