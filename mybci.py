@@ -16,7 +16,10 @@ from src.evaluation import (
     get_train_runs,
 )
 
-from src.bonus_pipeline import create_wavelet_pipeline
+from src.dataset.physionet import load_physionet_epochs
+from src.dataset.validation import validate_eeg_dataset
+
+from src.pipeline.bonus_pipeline import create_wavelet_pipeline
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
@@ -30,7 +33,7 @@ def parse_args() -> argparse.Namespace:
     
     return parser.parse_args()
 
-def create_selected_pipeline(pipeline_name: str):
+def create_selected_pipeline(pipeline_name: str, sfreq: float = 160.0):
     """
     Create a pipeline based on the selected pipeline name.
     Default is the standard CSP + LDA pipeline.
@@ -38,11 +41,11 @@ def create_selected_pipeline(pipeline_name: str):
     if (pipeline_name == "csp"):
         return create_pipeline()
     elif (pipeline_name == "wavelet"):
-        return create_wavelet_pipeline()
+        return create_wavelet_pipeline(sfreq=sfreq)
     else:
         raise ValueError(f"Unknown pipeline name: {pipeline_name}. Supported names are 'csp' and 'wavelet'.")
 
-def train_model(subject_id: int, test_run: int, pipeline_name: str = "csp") -> None:
+def train_model(subject_id: int, test_run: int, pipeline_name: str = "csp", sfreq: float = 160.0) -> None:
     """
     Train the model on the training runs for a given test run.
     """
@@ -55,8 +58,13 @@ def train_model(subject_id: int, test_run: int, pipeline_name: str = "csp") -> N
     
     X_train, y_train = preprocess_subject_runs(subject_id, train_runs)
 
+    train_dataset = load_physionet_epochs(
+        subject_id=subject_id,
+        run_ids=train_runs,
+        task_name=experiment_name
+    )
     
-    pipeline = create_selected_pipeline(pipeline_name)
+    pipeline = create_selected_pipeline(pipeline_name, sfreq=sfreq)
 
     scores = cross_val_score(pipeline, X_train, y_train, cv=5)
 
@@ -143,7 +151,7 @@ def main() -> None:
 
     # Mode selecting
     if args.mode == "train":
-        train_model(args.subject_id, args.run_id, args.pipeline)
+        train_model(args.subject_id, args.run_id, args.pipeline, sfreq=args.sfreq)
     elif args.mode == "predict":
         predict_stream(args.subject_id, args.run_id, args.pipeline)
 

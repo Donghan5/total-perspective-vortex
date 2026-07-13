@@ -4,20 +4,20 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from src.wavelet_transformer import MorletWaveletTransformer
 
-def create_wavelet_pipeline() -> Pipeline:
+def create_wavelet_pipeline(sfreq: float = 160.0) -> Pipeline:
     """
     Create a machine learning pipeline that includes Morlet wavelet feature extraction,
     standard scaling, and Linear Discriminant Analysis (LDA) for classification.
     """
 
     return Pipeline([
-        ('wavelet', MorletWaveletTransformer()),
+        ('wavelet', MorletWaveletTransformer(sfreq=sfreq)),
         ('scaler', StandardScaler()),
         ('lda', LinearDiscriminantAnalysis(solver='lsqr', shrinkage='auto'))
     ])
 
 
-def create_wavelet_select_pipeline(k: int = 20) -> Pipeline:
+def create_wavelet_select_pipeline(k: int = 20, sfreq: float = 160.0) -> Pipeline:
     """
     Create a Morlet wavelet pipeline with feature selection.
     
