@@ -5,3 +5,5 @@ __pycache__
 total-perspective-vortex.pdf
 models
 logs
+result.log
+results
