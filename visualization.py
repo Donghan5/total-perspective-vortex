@@ -50,7 +50,7 @@ def main() -> None:
         block=True
     )
 
-    raw_filtered.compute_psd(fmin=1, fmax=50).plot(
+    raw_filtered.compute_psd(fmin=8, fmax=30).plot(
         average=True,
         picks="data",
         show=False,
