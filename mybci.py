@@ -166,7 +166,13 @@ def train_model(
     
     pipeline = create_selected_pipeline(pipeline_name, sfreq=train_dataset.sfreq)
 
-    scores = cross_val_score(pipeline, train_dataset.X, train_dataset.y, cv=cv, groups=train_dataset.groups)
+    scores = cross_val_score(
+        pipeline,
+        train_dataset.X,
+        train_dataset.y,
+        cv=cv,
+        groups=train_dataset.groups
+    )
 
     pipeline.fit(train_dataset.X, train_dataset.y)
 
