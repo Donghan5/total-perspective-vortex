@@ -3,7 +3,7 @@ import argparse
 
 import joblib
 import numpy as np
-from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import LeaveOneGroupOut, cross_val_score
 
 from src.pipeline.pipeline import create_pipeline
 
@@ -160,11 +160,13 @@ def train_model(
         task_name=experiment_name
     )
 
+    cv = LeaveOneGroupOut()
+
     validate_eeg_dataset(train_dataset)
     
     pipeline = create_selected_pipeline(pipeline_name, sfreq=train_dataset.sfreq)
 
-    scores = cross_val_score(pipeline, train_dataset.X, train_dataset.y, cv=5)
+    scores = cross_val_score(pipeline, train_dataset.X, train_dataset.y, cv=cv, groups=train_dataset.groups)
 
     pipeline.fit(train_dataset.X, train_dataset.y)
 
