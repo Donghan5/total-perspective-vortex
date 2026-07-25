@@ -29,10 +29,10 @@ class CSP(BaseEstimator, TransformerMixin):
 
 		# Calculate cov of each class
 		X_class0 = X [y == 0]
-		cov_0 = np.mean([np.cov(epoch) for epoch in X_class0], axis=0)
+		cov_0 = np.mean([self._estimate_covariance(epoch) for epoch in X_class0], axis=0)
 
 		X_class1 = X [y == 1]
-		cov_1 = np.mean([np.cov(epoch) for epoch in X_class1], axis=0)
+		cov_1 = np.mean([self._estimate_covariance(epoch) for epoch in X_class1], axis=0)
 
 		cov_0 = self.regularize_covariance(cov_0)
 		cov_1 = self.regularize_covariance(cov_1)
@@ -57,6 +57,19 @@ class CSP(BaseEstimator, TransformerMixin):
 		features = np.log(np.var(X_csp, axis=2) + self.eps)
 		return features
 	
+	@staticmethod
+	def _estimate_covariance(epoch: np.ndarray) -> np.ndarray:
+		if epoch.ndim != 2:
+			raise ValueError("Input epoch must be a 2D array.")
+
+		n_samples = epoch.shape[1]
+		if n_samples < 2:
+			raise ValueError("Each epoch must have at least two samples to compute covariance.")
+
+		centered = epoch - epoch.mean(axis=1, keepdims=True)
+		cov = (centered @ centered.T) / (n_samples - 1)
+		return cov
+
 	def regularize_covariance(self, cov: np.ndarray) -> np.ndarray:
 		"""
 			Regularize covariance matrix to ensure numerical stability.
