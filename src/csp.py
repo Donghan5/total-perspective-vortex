@@ -29,10 +29,10 @@ class CSP(BaseEstimator, TransformerMixin):
 
 		# Calculate cov of each class
 		X_class0 = X [y == 0]
-		cov_0 = np.mean([self._estimate_covariance(epoch) for epoch in X_class0], axis=0)
+		cov_0 = np.mean([self.estimate_covariance(epoch) for epoch in X_class0], axis=0)
 
 		X_class1 = X [y == 1]
-		cov_1 = np.mean([self._estimate_covariance(epoch) for epoch in X_class1], axis=0)
+		cov_1 = np.mean([self.estimate_covariance(epoch) for epoch in X_class1], axis=0)
 
 		cov_0 = self.regularize_covariance(cov_0)
 		cov_1 = self.regularize_covariance(cov_1)
@@ -57,8 +57,7 @@ class CSP(BaseEstimator, TransformerMixin):
 		features = np.log(np.var(X_csp, axis=2) + self.eps)
 		return features
 	
-	@staticmethod
-	def _estimate_covariance(epoch: np.ndarray) -> np.ndarray:
+	def estimate_covariance(self, epoch: np.ndarray) -> np.ndarray:
 		if epoch.ndim != 2:
 			raise ValueError("Input epoch must be a 2D array.")
 
