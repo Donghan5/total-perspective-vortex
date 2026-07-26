@@ -13,8 +13,10 @@ from scipy.linalg import eigh
 # import mne
 import mne
 
+DEFAULT_CSP_REG = 1e-2
+
 class CSP(BaseEstimator, TransformerMixin):
-	def __init__(self, n_components=4, eps=1e-10, reg=0.0):
+	def __init__(self, n_components=4, eps=1e-10, reg=DEFAULT_CSP_REG):
 		self.n_components = n_components
 		self.eps = eps
 		self.reg = reg

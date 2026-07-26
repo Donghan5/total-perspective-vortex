@@ -1,6 +1,7 @@
 import numpy as np
+import pytest
 
-from src.csp import CSP
+from src.csp import CSP, DEFAULT_CSP_REG
 
 def test_estimate_covariance_matches_numpy() -> None:
     rng = np.random.default_rng(42)
@@ -32,3 +33,39 @@ def test_estimate_covariance_known_values() -> None:
     actual = CSP.estimate_covariance(epoch)
 
     np.testing.assert_allclose(actual, expected)
+
+def test_csp_regularization_is_enabled_by_default() -> None:
+    csp = CSP()
+
+    assert csp.reg == pytest.approx(DEFAULT_CSP_REG)
+    assert csp.reg > 0.0
+
+def test_regularize_covariance_adds_scaled_identity() -> None:
+    covariance = np.array([
+        [2.0, 0.5],
+        [0.5, 1.0],
+    ])
+
+    reg = 0.1
+    csp = CSP(reg=reg)
+
+    actual = csp.regularize_covariance(covariance)
+
+    n_channels = covariance.shape[0]
+    scale = np.trace(covariance) / n_channels
+
+    expected = covariance + reg * scale * np.eye(n_channels)
+
+    np.testing.assert_allclose(actual, expected)
+
+def test_regularization_can_be_disabled() -> None:
+    covariance = np.array([
+        [2.0, 0.5],
+        [0.5, 4.0],
+    ])
+
+    csp = CSP(reg=0.0)
+
+    actual = csp.regularize_covariance(covariance)
+
+    np.testing.assert_allclose(actual, covariance)

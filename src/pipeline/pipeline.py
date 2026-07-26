@@ -1,12 +1,12 @@
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.pipeline import Pipeline
 
-from src.csp import CSP
+from src.csp import CSP, DEFAULT_CSP_REG
 
 def create_pipeline(
         n_components: int = 4,
         eps: float = 1e-10,
-        csp_reg: float = 0.0
+        csp_reg: float = DEFAULT_CSP_REG
 ) -> Pipeline:
     """
     Create a machine learning pipeline with CSP and LDA.
