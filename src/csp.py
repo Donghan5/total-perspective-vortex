@@ -56,8 +56,9 @@ class CSP(BaseEstimator, TransformerMixin):
 		
 		features = np.log(np.var(X_csp, axis=2) + self.eps)
 		return features
-	
-	def estimate_covariance(self, epoch: np.ndarray) -> np.ndarray:
+
+	@staticmethod
+	def estimate_covariance(epoch: np.ndarray) -> np.ndarray:
 		if epoch.ndim != 2:
 			raise ValueError("Input epoch must be a 2D array.")
 

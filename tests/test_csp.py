@@ -17,3 +17,18 @@ def test_estimate_covariance_matches_numpy() -> None:
         rtol=1e-12,
         atol=1e-12,
     )
+
+def test_estimate_covariance_known_values() -> None:
+    epoch = np.array([
+        [1.0, 2.0, 3.0],
+        [2.0, 4.0, 6.0],
+    ])
+
+    expected = np.array([
+        [1.0, 2.0],
+        [2.0, 4.0],
+    ])
+
+    actual = CSP.estimate_covariance(epoch)
+
+    np.testing.assert_allclose(actual, expected)
