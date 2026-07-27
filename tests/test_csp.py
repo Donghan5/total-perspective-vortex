@@ -69,3 +69,27 @@ def test_regularization_can_be_disabled() -> None:
     actual = csp.regularize_covariance(covariance)
 
     np.testing.assert_allclose(actual, covariance)
+
+def test_regularization_negative_raises_value_error() -> None:
+    covariance = np.array([
+        [2.0, 0.5],
+        [0.5, 4.0],
+    ])
+
+    csp = CSP(reg=-0.1)
+
+    with pytest.raises(ValueError, match="Regularization parameter must be non-negative."):
+        csp.regularize_covariance(covariance)
+
+def test_estimate_covariance_invalid_input_raises_value_error() -> None:
+    csp = CSP()
+
+    # Test with 1D array
+    epoch_1d = np.array([1.0, 2.0, 3.0])
+    with pytest.raises(ValueError, match="Input epoch must be a 2D array."):
+        csp.estimate_covariance(epoch_1d)
+
+    # Test with less than 2 samples
+    epoch_few_samples = np.array([[1.0], [2.0]])
+    with pytest.raises(ValueError, match="Each epoch must have at least two samples to compute covariance."):
+        csp.estimate_covariance(epoch_few_samples)

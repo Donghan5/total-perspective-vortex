@@ -76,7 +76,10 @@ class CSP(BaseEstimator, TransformerMixin):
 		"""
 			Regularize covariance matrix to ensure numerical stability.
 		"""
-		if self.reg <= 0:
+		if self.reg < 0:
+			raise ValueError("Regularization parameter must be non-negative.")
+
+		if self.reg == 0:
 			return cov
 		
 		n_channels = cov.shape[0]
