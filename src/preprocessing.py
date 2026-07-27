@@ -41,6 +41,28 @@ def load_raw_eeg(subject_id: int, run_id: int) -> mne.io.BaseRaw:
 
 	return mne.io.read_raw_edf(edf_path, preload=True)
 
+def encode_binary_labels(
+		event_codes: np.ndarray,
+		target_event_id: dict[str, int],
+) -> np.ndarray:
+	"""
+	Args: event_codes: Array of event codes.
+		target_event_id: Dictionary mapping event names to event codes.
+	"""
+
+	t1_code = target_event_id['T1']
+	t2_code = target_event_id['T2']
+
+	valid_mask = np.isin(event_codes, [t1_code, t2_code])
+
+	if not np.all(valid_mask):
+		invalid_codes = event_codes[~valid_mask]
+		raise ValueError(
+			f"Invalid event codes found: {invalid_codes}. "
+		)
+
+	return (event_codes == t2_code).astype(np.int64)
+
 def filter_raw_eeg(
 		raw: mne.io.BaseRaw,
 		l_freq: float = 8.0,
@@ -77,7 +99,8 @@ def extract_epochs(raw_filtered: mne.io.BaseRaw) -> tuple[np.ndarray, np.ndarray
 	)
 
 	X = epochs.get_data()
-	y = epochs.events[:, 2] - 2 # 1 -> 0, 2 -> 1
+	event_codes = epochs.events[:, 2]
+	y = encode_binary_labels(event_codes, target_event_id)
 
 	return X, y
 
