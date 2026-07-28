@@ -14,6 +14,24 @@ class CSP(BaseEstimator, TransformerMixin):
 		self.eps = eps
 		self.reg = reg
 
+
+	def _validate_regularization(self) -> None:
+		numeric_types = (
+			int,
+			float,
+			np.integer,
+			np.floating,
+		)
+		"""
+			Validate the regularization parameter.
+		"""
+		if isinstance(self.reg, (bool, np.bool_)) or not isinstance(self.reg, numeric_types):
+			raise ValueError("Regularization parameter must be a number.")
+
+		if not np.isfinite(self.reg) or self.reg < 0:
+			raise ValueError("Regularization parameter must be finite and non-negative.")
+
+
 	def _validate_fit_inputs(self, X, y):
 		"""
 			Verify input data
@@ -57,11 +75,7 @@ class CSP(BaseEstimator, TransformerMixin):
 		if not np.isfinite(self.eps) or self.eps <= 0:
 			raise ValueError("Epsilon must be finite and positive.")
 		
-		if not isinstance(self.reg, (bool, np.bool_)) or not isinstance(self.reg, numeric_types):
-			raise ValueError("Regularization parameter must be a number.")
-
-		if not np.isfinite(self.reg) or self.reg < 0:
-			raise ValueError("Regularization parameter must be finite and non-negative.")
+		self._validate_regularization()
 
 	def fit(self, X, y):
 		"""
@@ -97,9 +111,10 @@ class CSP(BaseEstimator, TransformerMixin):
 
 		# Select index to store
 		n_half = self.n_components // 2
-		top_indices = (list(range(n_half)) + list(range(-n_half, 0)))
+		selected_indices = (list(range(n_half)) + list(range(-n_half, 0)))
 
-		self.filters_ = eigenvectors[:, top_indices]
+		self.filters_ = eigenvectors[:, selected_indices]
+		self.eigenvalues_ = eigenvalues[selected_indices]
 
 		return self
 	
@@ -119,7 +134,10 @@ class CSP(BaseEstimator, TransformerMixin):
 
 		if X.shape[1] != self.n_channels_in_:
 			raise ValueError(f"Input X must have {self.n_channels_in_} channels, but got {X.shape[1]}.")
-		
+
+		if X.shape[2] == 0:
+			raise ValueError("Each epoch must contain at least one sample.")
+
 		X_csp = np.array([self.filters_.T @ epoch for epoch in X])
 		
 		features = np.log(np.var(X_csp, axis=2) + self.eps)
@@ -127,6 +145,11 @@ class CSP(BaseEstimator, TransformerMixin):
 
 	@staticmethod
 	def estimate_covariance(epoch: np.ndarray) -> np.ndarray:
+		"""
+			Estimate the covariance matrix of a single epoch.
+		"""
+		epoch = np.asarray(epoch, dtype=float)
+
 		if epoch.ndim != 2:
 			raise ValueError("Input epoch must be a 2D array.")
 
@@ -142,9 +165,7 @@ class CSP(BaseEstimator, TransformerMixin):
 		"""
 			Regularize covariance matrix to ensure numerical stability.
 		"""
-		if self.reg < 0:
-			raise ValueError("Regularization parameter must be non-negative.")
-
+		self._validate_regularization()
 		if self.reg == 0:
 			return cov
 		
