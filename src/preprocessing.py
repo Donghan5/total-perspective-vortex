@@ -49,9 +49,22 @@ def encode_binary_labels(
 	Args: event_codes: Array of event codes.
 		target_event_id: Dictionary mapping event names to event codes.
 	"""
+	event_codes = np.asarray(event_codes)
 
+	if event_codes.ndim != 1:
+		raise ValueError("event_codes must be a 1D array.")
+
+	if event_codes.size == 0:
+		raise ValueError("event_codes must not be empty.")
+
+	if "T1" not in target_event_id or "T2" not in target_event_id:
+		raise ValueError("target_event_id contain both T1 and T2.")
+	
 	t1_code = target_event_id['T1']
 	t2_code = target_event_id['T2']
+
+	if t1_code == t2_code:
+		raise ValueError("T1 and T2 must have different event code.")
 
 	valid_mask = np.isin(event_codes, [t1_code, t2_code])
 
@@ -86,6 +99,17 @@ def extract_epochs(raw_filtered: mne.io.BaseRaw) -> tuple[np.ndarray, np.ndarray
 	- Tuple of (X, y) where X is the EEG data and y is the labels.
 	"""
 	events, event_id = mne.events_from_annotations(raw_filtered)
+
+	missing_events = {
+		"T1",
+		"T2",
+	} - event_id.keys()
+
+	if missing_events:
+		raise ValueError(
+			"This run does not contain the required"
+			f"task annotations: {sorted(missing_events)}"
+		)
 	target_event_id = {'T1': event_id['T1'], 'T2': event_id['T2']}
 	
 	epochs = mne.Epochs(
@@ -132,6 +156,11 @@ def preprocess_subject_runs(
 			X: Tuples of X. (total_epochs, 64, 641)
 			y: Tuples of y. (total_epochs,)
 	"""
+
+	if not run_ids:
+		raise ValueError(
+			"run_ids must contain at least one run."
+		)
 
 	X_list, y_list = [], []
 	
