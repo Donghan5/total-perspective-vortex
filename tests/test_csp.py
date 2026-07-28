@@ -93,3 +93,14 @@ def test_estimate_covariance_invalid_input_raises_value_error() -> None:
     epoch_few_samples = np.array([[1.0], [2.0]])
     with pytest.raises(ValueError, match="Each epoch must have at least two samples to compute covariance."):
         csp.estimate_covariance(epoch_few_samples)
+
+def test_csp_fit_accepts_non_zero_one_binary_labels() -> None:
+    rng = np.random.default_rng(42)
+    X = rng.normal(size=(6, 4, 50))
+    y = np.array([1, 2, 1, 2, 1, 2])
+
+    csp = CSP(n_components=2)
+    csp.fit(X, y)
+
+    np.testing.assert_array_equal(csp.classes_, np.array([1, 2]))
+    assert csp.filters_.shape == (4, 2)
