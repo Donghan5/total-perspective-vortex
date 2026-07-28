@@ -14,7 +14,7 @@ class CSP(BaseEstimator, TransformerMixin):
 		self.eps = eps
 		self.reg = reg
 
-	def _verify_inputs(self, X, y):
+	def _validate_fit_inputs(self, X, y):
 		"""
 			Verify input data
 			X : 3D array of shape (n_epochs, n_channels, n_samples)
@@ -70,7 +70,7 @@ class CSP(BaseEstimator, TransformerMixin):
 		X = np.asarray(X, dtype=float)
 		y = np.asarray(y)
 
-		self._verify_inputs(X, y)
+		self._validate_fit_inputs(X, y)
 		
 		classes = np.unique(y)
 
