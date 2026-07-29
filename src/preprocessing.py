@@ -58,20 +58,20 @@ def encode_binary_labels(
 		raise ValueError("event_codes must not be empty.")
 
 	if "T1" not in target_event_id or "T2" not in target_event_id:
-		raise ValueError("target_event_id contain both T1 and T2.")
+		raise ValueError("target_event_id must contain both T1 and T2.")
 	
 	t1_code = target_event_id['T1']
 	t2_code = target_event_id['T2']
 
 	if t1_code == t2_code:
-		raise ValueError("T1 and T2 must have different event code.")
+		raise ValueError("T1 and T2 must have different event codes.")
 
 	valid_mask = np.isin(event_codes, [t1_code, t2_code])
 
 	if not np.all(valid_mask):
-		invalid_codes = event_codes[~valid_mask]
+		invalid_codes = np.unique(event_codes[~valid_mask])
 		raise ValueError(
-			f"Invalid event codes found: {invalid_codes}. "
+			f"Invalid event codes found: {invalid_codes.tolist()}. "
 		)
 
 	return (event_codes == t2_code).astype(np.int64)
@@ -107,7 +107,7 @@ def extract_epochs(raw_filtered: mne.io.BaseRaw) -> tuple[np.ndarray, np.ndarray
 
 	if missing_events:
 		raise ValueError(
-			"This run does not contain the required"
+			"This run does not contain the required "
 			f"task annotations: {sorted(missing_events)}"
 		)
 	target_event_id = {'T1': event_id['T1'], 'T2': event_id['T2']}
