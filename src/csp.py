@@ -159,7 +159,11 @@ class CSP(BaseEstimator, TransformerMixin):
 
 		centered = epoch - epoch.mean(axis=1, keepdims=True)
 		cov = (centered @ centered.T) / (n_samples - 1)
-		return cov
+		trace = np.trace(cov)
+
+		if not np.isfinite(trace) or trace <= 0:
+			raise ValueError("Epoch covariance trace must be finite and positive.")
+		return cov / trace
 
 	def regularize_covariance(self, cov: np.ndarray) -> np.ndarray:
 		"""
