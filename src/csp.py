@@ -139,7 +139,6 @@ class CSP(BaseEstimator, TransformerMixin):
 			raise ValueError("Each epoch must contain at least one sample.")
 
 		X_csp = np.array([self.filters_.T @ epoch for epoch in X])
-		
 		features = np.log(np.var(X_csp, axis=2) + self.eps)
 		return features
 
