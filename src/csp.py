@@ -98,18 +98,32 @@ class CSP(BaseEstimator, TransformerMixin):
 
 		# Calculate cov of each class
 		X_class0 = X[y == class_0]
-		cov_0 = np.mean([self.estimate_covariance(epoch) for epoch in X_class0], axis=0)
+		cov_0 = np.mean(
+			[
+				self.normalize_covariance_trace(
+					self.estimate_covariance(epoch)
+				)
+				for epoch in X_class0
+			],
+			axis=0
+		)
 
 		X_class1 = X[y == class_1]
-		cov_1 = np.mean([self.estimate_covariance(epoch) for epoch in X_class1], axis=0)
+		cov_1 = np.mean(
+			[
+				self.normalize_covariance_trace(
+					self.estimate_covariance(epoch)
+				)
+				for epoch in X_class1
+			],
+			axis=0
+		)
 
 		cov_0 = self.regularize_covariance(cov_0)
 		cov_1 = self.regularize_covariance(cov_1)
 
-		# Genealized eigenvalue problem
 		eigenvalues, eigenvectors = eigh(cov_0, cov_0 + cov_1)
 
-		# Select index to store
 		n_half = self.n_components // 2
 		selected_indices = (list(range(n_half)) + list(range(-n_half, 0)))
 
@@ -119,9 +133,7 @@ class CSP(BaseEstimator, TransformerMixin):
 		return self
 	
 	def transform(self, X):
-		"""
-			Applying weight
-		"""
+		"""Transform the input data using the fitted CSP filters."""
 		check_is_fitted(
 			self,
 			attributes=["filters_", "classes_", "n_channels_in_"],
@@ -144,9 +156,7 @@ class CSP(BaseEstimator, TransformerMixin):
 
 	@staticmethod
 	def estimate_covariance(epoch: np.ndarray) -> np.ndarray:
-		"""
-			Estimate the covariance matrix of a single epoch.
-		"""
+		"""Estimate the covariance matrix of a single epoch."""
 		epoch = np.asarray(epoch, dtype=float)
 
 		if epoch.ndim != 2:
@@ -158,10 +168,24 @@ class CSP(BaseEstimator, TransformerMixin):
 
 		centered = epoch - epoch.mean(axis=1, keepdims=True)
 		cov = (centered @ centered.T) / (n_samples - 1)
+
+		return cov
+
+	@staticmethod
+	def normalize_covariance_trace(cov: np.ndarray) -> np.ndarray:
+		""" Normalize the covariance matrix by its trace. """
+		cov = np.asarray(cov, dtype=float)
+		if cov.ndim != 2:
+			raise ValueError("Input covariance must be a 2D array.")
+
+		if cov.shape[0] != cov.shape[1]:
+			raise ValueError("Input covariance must be a square matrix.")
+
 		trace = np.trace(cov)
 
 		if not np.isfinite(trace) or trace <= 0:
 			raise ValueError("Epoch covariance trace must be finite and positive.")
+
 		return cov / trace
 
 	def regularize_covariance(self, cov: np.ndarray) -> np.ndarray:

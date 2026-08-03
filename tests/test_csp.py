@@ -104,3 +104,20 @@ def test_csp_fit_accepts_non_zero_one_binary_labels() -> None:
 
     np.testing.assert_array_equal(csp.classes_, np.array([1, 2]))
     assert csp.filters_.shape == (4, 2)
+
+def test_normalize_covariance_test() -> None:
+    covariance = np.array([
+        [1.0, 2.0],
+        [2.0, 4.0],
+    ])
+
+    actual = CSP.normalize_covariance_trace(covariance)
+
+    expected = np.array([
+        [1.0, 2.0],
+        [2.0, 4.0],
+    ])
+
+    np.testing.assert_allclose(actual, expected)
+
+    assert np.trace(actual) == pytest.approx(1.0)
