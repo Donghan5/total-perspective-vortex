@@ -78,7 +78,7 @@ def test_regularization_negative_raises_value_error() -> None:
 
     csp = CSP(reg=-0.1)
 
-    with pytest.raises(ValueError, match="Regularization parameter must be non-negative."):
+    with pytest.raises(ValueError, match="Regularization parameter must be finite and non-negative."):
         csp.regularize_covariance(covariance)
 
 def test_estimate_covariance_invalid_input_raises_value_error() -> None:
@@ -113,11 +113,7 @@ def test_normalize_covariance_test() -> None:
 
     actual = CSP.normalize_covariance_trace(covariance)
 
-    expected = np.array([
-        [1.0, 2.0],
-        [2.0, 4.0],
-    ])
-
+    expected = covariance / np.trace(covariance)
     np.testing.assert_allclose(actual, expected)
 
     assert np.trace(actual) == pytest.approx(1.0)

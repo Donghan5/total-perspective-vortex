@@ -26,7 +26,7 @@ def test_encode_binary_labels_rejects_unknown_codes() -> None:
 
     with pytest.raises(
         ValueError,
-        match="Unknown event codes found in the input array."
+        match="Invalid event codes found"
     ):
         encode_binary_labels(event_codes, target_event_id)
     
