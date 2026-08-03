@@ -11,20 +11,14 @@ from src.prediction import predict_stream
 from src.utils import get_model_path
 
 from src.evaluation import (
-    EXPERIMENTS,
     evaluate_all_experiments,
     get_train_runs,
-)
-from src.results import (
-    build_expected_evaluation_keys,
-    save_evaluation_run,
 )
 
 from src.dataset.physionet import load_physionet_epochs
 from src.dataset.validation import validate_eeg_dataset
 
 from src.pipeline.bonus_pipeline import create_wavelet_pipeline
-
 
 def build_parser() -> argparse.ArgumentParser:
     """
@@ -40,9 +34,6 @@ def build_parser() -> argparse.ArgumentParser:
 Examples:
   Run full CSP evaluation:
     python mybci.py
-
-  Run full CSP evaluation with a result label:
-    python mybci.py --config-id csp_trace_reference
 
   Train the required CSP pipeline:
     python mybci.py 4 14 train
@@ -89,17 +80,7 @@ Examples:
         help="Pipeline type to use. Default: csp.",
     )
 
-    parser.add_argument(
-        "--config-id",
-        default="csp_reference",
-        help=(
-            "Label used for full-evaluation result artifacts. "
-            "Default: csp_reference."
-        ),
-    )
-
     return parser
-
 
 def validate_args(
         args: argparse.Namespace,
@@ -123,27 +104,23 @@ def validate_args(
             "Full evaluation currently uses the CSP pipeline."
         )
 
-
 def parse_args() -> argparse.Namespace:
     parser = build_parser()
     args = parser.parse_args()
     validate_args(args, parser)
     return args
 
-
 def create_selected_pipeline(pipeline_name: str, sfreq: float = 160.0):
     """
     Create a pipeline based on the selected pipeline name.
     Default is the standard CSP + LDA pipeline.
     """
-    if pipeline_name == "csp":
+    if (pipeline_name == "csp"):
         return create_pipeline()
-    if pipeline_name == "wavelet":
+    elif (pipeline_name == "wavelet"):
         return create_wavelet_pipeline(sfreq=sfreq)
-    raise ValueError(
-        f"Unknown pipeline name: {pipeline_name}. "
-        "Supported names are 'csp' and 'wavelet'."
-    )
+    else:
+        raise ValueError(f"Unknown pipeline name: {pipeline_name}. Supported names are 'csp' and 'wavelet'.")
 
 
 def print_train_model_results(
@@ -162,21 +139,20 @@ def print_train_model_results(
     print(f"Mean CV Score: {np.mean(scores):.4f}")
     print(f"Model saved to: {model_path}")
 
-
 def train_model(
-        subject_id: int,
-        test_run: int,
+        subject_id: int, 
+        test_run: int, 
         pipeline_name: str = "csp"
 ) -> None:
     """
     Train the model on the training runs for a given test run.
     """
+    # Get the training runs for the given test run
     experiment_name, train_runs = get_train_runs(test_run)
 
+    # Guard against leakage
     if test_run in train_runs:
-        raise ValueError(
-            f"Test run {test_run} cannot be in the training runs {train_runs}"
-        )
+        raise ValueError(f"Test run {test_run} cannot be in the training runs {train_runs}")
 
     train_dataset = load_physionet_epochs(
         subject_id=subject_id,
@@ -187,11 +163,8 @@ def train_model(
     cv = LeaveOneGroupOut()
 
     validate_eeg_dataset(train_dataset)
-
-    pipeline = create_selected_pipeline(
-        pipeline_name,
-        sfreq=train_dataset.sfreq,
-    )
+    
+    pipeline = create_selected_pipeline(pipeline_name, sfreq=train_dataset.sfreq)
 
     scores = cross_val_score(
         pipeline,
@@ -225,7 +198,6 @@ def train_model(
         model_path=model_path
     )
 
-
 def print_evaluation_summary(results: list[dict], errors: list[dict]) -> None:
     """
     Helper function to print the evaluation summary in a readable format.
@@ -243,17 +215,13 @@ def print_evaluation_summary(results: list[dict], errors: list[dict]) -> None:
         print(f"Maximum accuracy: {np.max(accuracies):.4f}")
 
         print("\n=== Mean accuracy by experiment ===")
-        experiment_names = sorted(
-            set(r["experiment_name"] for r in results)
-        )
+        experiment_names = sorted(set(r["experiment_name"] for r in results))
         for exp_name in experiment_names:
             scores = [
                 r["accuracy"] for r in results
                 if r["experiment_name"] == exp_name
             ]
-            print(
-                f"  {exp_name}: mean accuracy = {np.mean(scores):.4f}"
-            )
+            print(f"  {exp_name}: mean accuracy = {np.mean(scores):.4f}")
 
     if errors:
         print("\n=== First Errors ===")
@@ -265,83 +233,26 @@ def print_evaluation_summary(results: list[dict], errors: list[dict]) -> None:
                 f"Error: {error['error']}"
             )
 
-
-def build_full_evaluation_config() -> dict:
-    """Describe the exact default configuration used by full evaluation."""
-    pipeline = create_pipeline()
-    params = pipeline.get_params(deep=True)
-
-    return {
-        "pipeline": "csp_lda",
-        "dataset": "PhysioNet EEGMMIDB",
-        "subjects": {
-            "start": 1,
-            "end": 109,
-            "count": 109,
-        },
-        "evaluation": {
-            "protocol": "leave_one_run_out",
-            "experiments": EXPERIMENTS,
-        },
-        "preprocessing": {
-            "l_freq": 8.0,
-            "h_freq": 30.0,
-            "tmin": 0.0,
-            "tmax": 4.0,
-            "baseline": None,
-        },
-        "csp": {
-            "n_components": params["csp__n_components"],
-            "eps": params["csp__eps"],
-            "reg": params["csp__reg"],
-            "covariance_trace_normalization": True,
-            "feature_normalization": False,
-        },
-        "lda": {
-            "solver": params["lda__solver"],
-            "shrinkage": params["lda__shrinkage"],
-        },
-    }
-
-
-def run_full_evaluation(config_id: str) -> None:
+    
+def run_full_evaluation() -> None:
     """
     Run the full evaluation for all subjects and test runs.
     """
-    subject_ids = list(range(1, 110))
-    results, errors = evaluate_all_experiments(subject_range=subject_ids)
+    results, errors = evaluate_all_experiments()
     print_evaluation_summary(results, errors)
-
-    expected_keys = build_expected_evaluation_keys(
-        subject_ids,
-        EXPERIMENTS,
-    )
-    saved_paths = save_evaluation_run(
-        results=results,
-        errors=errors,
-        config_id=config_id,
-        config=build_full_evaluation_config(),
-        expected_keys=expected_keys,
-    )
-
-    print("\n=== Saved Evaluation Artifacts ===")
-    print(f"Evaluations CSV: {saved_paths['evaluations']}")
-    print(f"Errors JSON: {saved_paths['errors']}")
-    print(f"Metadata JSON: {saved_paths['metadata']}")
-
 
 def main() -> None:
     args = parse_args()
 
     if args.subject_id is None:
-        run_full_evaluation(args.config_id)
+        run_full_evaluation()
         return
-
+    
+    # Mode selecting
     if args.mode == "train":
         train_model(args.subject_id, args.run_id, args.pipeline)
     elif args.mode == "predict":
         predict_stream(args.subject_id, args.run_id, args.pipeline)
-
 
 if __name__ == "__main__":
     main()
