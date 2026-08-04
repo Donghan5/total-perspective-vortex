@@ -117,3 +117,39 @@ def test_normalize_covariance_test() -> None:
     np.testing.assert_allclose(actual, expected)
 
     assert np.trace(actual) == pytest.approx(1.0)
+
+def test_csp_components_prefer_opposite_classes() -> None:
+    rng = np.random.default_rng(42)
+
+    n_epochs = 50
+    n_samples = 300
+
+    X_class_0 = np.array([
+        np.vstack([
+            rng.normal(0.0, 3.0, n_samples),
+            rng.normal(0.0, 0.5, n_samples),
+        ])
+        for _ in range(n_epochs)
+    ])
+
+    X_class_1 = np.array([
+        np.vstack([
+            rng.normal(0.0, 0.5, n_samples),
+            rng.normal(0.0, 3.0, n_samples),
+        ])
+        for _ in range(n_epochs)
+    ])
+
+    X = np.concatenate([X_class_0, X_class_1], axis=0)
+    y = np.array([0] * n_epochs + [1] * n_epochs)
+
+    csp = CSP(n_components=2, reg=0.0)
+
+    features = csp.fit_transform(X, y)
+
+    mean_0 = features[y == 0].mean(axis=0)
+    mean_1 = features[y == 1].mean(axis=0)
+
+    difference = mean_0 - mean_1
+
+    assert difference[0] * difference[1] < 0
