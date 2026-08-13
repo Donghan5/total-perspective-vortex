@@ -32,6 +32,29 @@ class ExperimentSpec:
 
         return train_runs, test_runs
 
+    def get_fold_repetitions(
+            self,
+            held_out_index: int,
+    ) -> tuple[
+        list[tuple[int, ...]],
+        tuple[int, ...],
+    ]:
+        if not 0 <= held_out_index < len(self.repetitions):
+            raise ValueError(
+                "held_out_index must be between "
+                f"0 and {len(self.repetitions) - 1}."
+            )
+
+        test_repetition = self.repetitions[held_out_index]
+
+        train_repetitions = [
+            repetition
+            for index, repetition in enumerate(self.repetitions)
+            if index != held_out_index
+        ]
+
+        return train_repetitions, test_repetition
+
 EXPERIMENTS: dict[int, ExperimentSpec] = {
     0: ExperimentSpec(
         experiment_id=0,

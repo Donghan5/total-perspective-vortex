@@ -12,7 +12,6 @@ from src.utils import get_model_path
 
 from src.evaluation import (
     evaluate_all_experiments,
-    get_train_runs,
 )
 
 from src.dataset.physionet import load_physionet_epochs
@@ -148,7 +147,7 @@ def train_model(
     Train the model on the training runs for a given test run.
     """
     # Get the training runs for the given test run
-    experiment_name, train_runs = get_train_runs(test_run)
+    # experiment_name, train_runs = get_train_runs(test_run)
 
     # Guard against leakage
     if test_run in train_runs:
