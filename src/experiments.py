@@ -3,6 +3,13 @@ from typing import Literal
 
 LabelStrategy = Literal["event", "modality"]
 
+SINGLE_RUN_TASKS: dict[str, tuple[int, ...]] = {
+    "actual_left_vs_right_fist": (3, 7, 11),
+    "imagined_left_vs_right_fist": (4, 8, 12),
+    "actual_fists_vs_feet": (5, 9, 13),
+    "imagined_fists_vs_feet": (6, 10, 14),
+}
+
 @dataclass(frozen=True)
 class ExperimentSpec:
     experiment_id: int
@@ -93,6 +100,17 @@ EXPERIMENTS: dict[int, ExperimentSpec] = {
         repetitions=((5, 6), (9, 10), (13, 14)),
     ),
 }
+
+def resolve_single_run_task(test_run: int) -> tuple[str, tuple[int, ...]]:
+    """ Resolving the single run tasks. """
+    for task_name, run_ids in SINGLE_RUN_TASKS.items():
+        if test_run in run_ids:
+            return task_name, run_ids
+
+    raise ValueError(
+        f"Unknown test_run: {test_run}. "
+        f"Supported runs are 3 through 14."
+    )
 
 
 def get_experiment(experiment_id: int) -> ExperimentSpec:

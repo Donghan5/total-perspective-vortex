@@ -1,9 +1,11 @@
 import numpy as np
+
 from src.preprocessing import preprocess_eeg_data
 from src.pipeline.pipeline import create_pipeline
 from src.experiments import (
     EXPERIMENTS,
     ExperimentSpec,
+    resolve_single_run_task
 )
 
 ALL_TASK_RUNS = tuple(sorted({
@@ -40,6 +42,25 @@ def combine_cached_runs(
     y = np.concatenate([run_cache[run_id][1] for run_id in run_ids], axis=0)
 
     return X, y
+
+def get_train_runs(
+        test_run: int,
+) -> tuple[str, list[int]]:
+    task_name, run_ids = resolve_single_run_task(test_run)
+
+    train_runs = [
+        run_id
+        for run_id in run_ids
+        if run_id != test_run
+    ]
+
+    if len(train_runs) != 2:
+        raise ValueError(
+            f"Expected exactly 2 training runs for {test_run}, "
+            f"got {len(train_runs)} runs."
+        )
+
+    return task_name, run_ids
 
 def combine_modality_repetitions(
         run_cache: RunCache,
