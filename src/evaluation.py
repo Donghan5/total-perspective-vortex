@@ -60,7 +60,7 @@ def get_train_runs(
             f"got {len(train_runs)} runs."
         )
 
-    return task_name, run_ids
+    return task_name, train_runs
 
 def combine_modality_repetitions(
         run_cache: RunCache,
@@ -127,15 +127,7 @@ def evaluate_held_out_fold(
         X_train, y_train = combine_cached_runs(run_cache, train_runs)
         X_test, y_test = combine_cached_runs(run_cache, test_runs)
     elif experiment.label_strategy == "modality":
-        train_repetitions = [
-            repetition
-            for index, repetition in enumerate(experiment.repetitions)
-            if index != held_out_index
-        ]
-
-        test_repetitions = [
-            experiment.repetitions[held_out_index]
-        ]
+        train_repetitions, test_repetitions = experiment.get_fold_repetitions(held_out_index)
 
         X_train, y_train = combine_modality_repetitions(run_cache, train_repetitions)
         X_test, y_test = combine_modality_repetitions(run_cache, test_repetitions)
