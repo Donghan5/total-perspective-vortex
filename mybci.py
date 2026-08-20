@@ -228,7 +228,7 @@ def print_evaluation_summary(results: list[dict], errors: list[dict]) -> None:
             print(
                 f"Subject S{error['subject_id']:03d}, "
                 f"Experiment: {error['experiment_name']}, "
-                f"Test run: R{error['test_run']:02d}, "
+                f"Test run: R{error['test_run']}, "
                 f"Error: {error['error']}"
             )
 

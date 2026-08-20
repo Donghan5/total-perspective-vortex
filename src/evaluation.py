@@ -202,7 +202,7 @@ def evaluate_all_experiments(
                 "experiment_id": None,
                 "experiment_name": None,
                 "held_out_index": None,
-                "test_run": None,
+                "test_run": list[int] | None,
                 "error": (
                     "Failed to evaluate subject: "
                     f"{e}"
