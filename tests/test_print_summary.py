@@ -1,5 +1,6 @@
 import pytest
 from mybci import print_evaluation_summary
+from src.evaluation import evaluate_all_experiments
 
 @pytest.mark.parametrize(
     ("test_runs", "expected_output"),
@@ -32,4 +33,27 @@ def test_print_evaluation_summary_formats_test_runs(
     assert expected_output in captured.out
     assert "test failure" in captured.out
 
-def test_subject_error_test_runs_schema(monkeypatch)
+def test_subject_error_test_runs_schema(monkeypatch):
+    def raise_loading_error(subject_id):
+        raise RuntimeError("loading failed")
+    monkeypatch.setattr(
+        "src.evaluation.build_subject_run_cache",
+        raise_loading_error,
+    )
+    results, errors = evaluate_all_experiments(subject_range=[1])
+    assert results == []
+    assert len(errors) == 1
+
+    error = errors[0]
+
+    assert error.keys() == {
+        "subject_id",
+        "experiment_id",
+        "experiment_name",
+        "held_out_index",
+        "test_runs",
+        "error",
+    }
+    assert error["subject_id"] == 1
+    assert error["test_runs"] is None
+    assert "loading failed" in error["error"]

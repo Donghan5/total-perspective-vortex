@@ -224,19 +224,19 @@ def print_evaluation_summary(results: list[dict], errors: list[dict]) -> None:
 
     if errors:
         print("\n=== First Errors ===")
-        test_runs = errors["test_runs"]
-        if test_runs is None:
-            test_runs_text = "None"
-        else:
-            test_runs_text = ", ".join(
-                f"R{run_id:02d}"
-                for run_id in test_runs
-            )
         for error in errors[:10]:
+            test_runs = error["test_runs"]
+            if test_runs is None:
+                test_runs_text = "None"
+            else:
+                test_runs_text = ", ".join(
+                    f"R{run_id:02d}"
+                    for run_id in test_runs
+                )
             print(
                 f"Subject S{error['subject_id']:03d}, "
                 f"Experiment: {error['experiment_name']}, "
-                f"Test run: {test_runs_text},  "
+                f"Test runs: {test_runs_text},  "
                 f"Error: {error['error']}"
             )
 
