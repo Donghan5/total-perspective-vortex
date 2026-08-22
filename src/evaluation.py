@@ -128,9 +128,9 @@ def evaluate_held_out_fold(
         X_test, y_test = combine_cached_runs(run_cache, test_runs)
     elif experiment.label_strategy == "modality":
         train_repetitions, test_repetitions = experiment.get_fold_repetitions(held_out_index)
-
+        listed_test_repetitions = [test_repetitions]
         X_train, y_train = combine_modality_repetitions(run_cache, train_repetitions)
-        X_test, y_test = combine_modality_repetitions(run_cache, test_repetitions)
+        X_test, y_test = combine_modality_repetitions(run_cache, listed_test_repetitions)
     else:
         raise ValueError(
             "Unknown label strategy: "
