@@ -16,7 +16,7 @@ An EEG motor-task classification project built with the PhysioNet EEG Motor Move
 
 The project uses the [EEG Motor Movement/Imagery Dataset](https://physionet.org/content/eegmmidb/1.0.0/), which contains 64-channel EEG recordings sampled at 160 Hz.
 
-The mandatory evaluation defines six binary experiments:
+For the six-experiment evaluation, this implementation uses:
 
 | ID | Experiment | Repetitions | Classification target |
 | --- | --- | --- | --- |
