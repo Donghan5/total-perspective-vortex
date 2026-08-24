@@ -215,12 +215,20 @@ def print_evaluation_summary(results: list[dict], errors: list[dict]) -> None:
 
         print("\n=== Mean accuracy by experiment ===")
         experiment_names = sorted(set(r["experiment_name"] for r in results))
+        experiment_means = []
         for exp_name in experiment_names:
             scores = [
                 r["accuracy"] for r in results
                 if r["experiment_name"] == exp_name
             ]
-            print(f"  {exp_name}: mean accuracy = {np.mean(scores):.4f}")
+            mean_accuracy = float(np.mean(scores))
+            experiment_means.append(mean_accuracy)
+            print(f"  {exp_name}: mean accuracy = {mean_accuracy:.4f}")
+
+        print(
+            f"Mean accuracy of {len(experiment_means)} experiments: "
+            f"{np.mean(experiment_means):.4f}"
+        )
 
     if errors:
         print("\n=== First Errors ===")

@@ -8,7 +8,7 @@ An EEG motor-task classification project built with the PhysioNet EEG Motor Move
 - Preprocesses EEG recordings with an 8–30 Hz band-pass filter and 0–4 second epochs.
 - Provides a required CSP + LDA pipeline and an optional Morlet wavelet + LDA pipeline.
 - Uses scikit-learn pipelines for training and inference.
-- Prevents run-level data leakage by training on two runs from an experiment and testing on the remaining run.
+- Evaluates six binary experiments with three held-out repetitions and disjoint training and test runs.
 - Reports prediction accuracy and per-epoch latency against a two-second constraint.
 - Includes notebooks for data exploration, preprocessing, and pipeline experiments.
 
@@ -16,16 +16,18 @@ An EEG motor-task classification project built with the PhysioNet EEG Motor Move
 
 The project uses the [EEG Motor Movement/Imagery Dataset](https://physionet.org/content/eegmmidb/1.0.0/), which contains 64-channel EEG recordings sampled at 160 Hz.
 
-The supported binary experiments are:
+The mandatory evaluation defines six binary experiments:
 
-| Experiment | Runs |
-| --- | --- |
-| Actual left fist vs. right fist | 3, 7, 11 |
-| Imagined left fist vs. right fist | 4, 8, 12 |
-| Actual fists vs. feet | 5, 9, 13 |
-| Imagined fists vs. feet | 6, 10, 14 |
+| ID | Experiment | Repetitions | Classification target |
+| --- | --- | --- | --- |
+| 0 | Actual left fist vs. right fist | `(3)`, `(7)`, `(11)` | T1 vs. T2 events |
+| 1 | Imagined left fist vs. right fist | `(4)`, `(8)`, `(12)` | T1 vs. T2 events |
+| 2 | Actual fists vs. feet | `(5)`, `(9)`, `(13)` | T1 vs. T2 events |
+| 3 | Imagined fists vs. feet | `(6)`, `(10)`, `(14)` | T1 vs. T2 events |
+| 4 | Actual vs. imagined left/right fists | `(3, 4)`, `(7, 8)`, `(11, 12)` | Actual (`0`) vs. imagined (`1`) |
+| 5 | Actual vs. imagined fists/feet | `(5, 6)`, `(9, 10)`, `(13, 14)` | Actual (`0`) vs. imagined (`1`) |
 
-For a selected held-out run, the other two runs from the same experiment are used for training.
+Each experiment uses three held-out folds. Experiments 0–3 hold out one run and train on the other two runs. Experiments 4–5 treat an actual/imagined run pair as one repetition: each fold holds out one pair and trains on the other two pairs. Training and test runs are disjoint in every fold.
 
 ## Processing and Classification
 
@@ -50,7 +52,40 @@ flowchart LR
 
 The primary pipeline extracts four Common Spatial Pattern components, computes log-variance features, and classifies them with Linear Discriminant Analysis.
 
-The CSP pipeline records at least 60% accuracy for every subject in the current evaluation results.
+The mandatory acceptance metric is the equally weighted mean of the six experiment means on never-learned held-out data. The verified full evaluation achieved `0.680222`, above the required `0.60`. Individual experiments and subjects are not each required to exceed 60%.
+
+### Verified mandatory results
+
+The full CSP evaluation covered 109 subjects, six experiments, and three held-out folds per experiment:
+
+```text
+Successful evaluations: 1962
+Errored evaluations: 0
+Results per experiment: 327
+Subjects with 18 results: 109/109
+Mean accuracy of 6 experiments: 0.680222
+```
+
+| Experiment | Mean accuracy |
+| --- | ---: |
+| 0 | 0.666959 |
+| 1 | 0.645281 |
+| 2 | 0.771902 |
+| 3 | 0.680918 |
+| 4 | 0.662751 |
+| 5 | 0.653518 |
+
+The mandatory subject 4 / held-out R14 CLI smoke produced:
+
+```text
+Training runs: R6, R10
+Cross-validation scores: 0.73333333, 0.66666667
+Mean CV score: 0.7000
+Held-out R14 accuracy: 0.8000
+Average prediction latency per epoch: 0.0011 seconds
+Maximum prediction latency: 0.0105 seconds
+2-second latency constraint satisfied: True
+```
 
 ### Wavelet pipeline (optional)
 
@@ -67,14 +102,17 @@ The optional pipeline extracts Morlet wavelet band-power features over 8–30 Hz
 ├── requirements.txt
 ├── scripts/
 │   ├── import_data.sh        # PhysioNet dataset download
+│   ├── mandatory_demo.sh     # Required CSP train/predict/full-evaluation demo
 │   └── bonus_demo.sh         # CSP/Wavelet training and prediction demo
 ├── src/
 │   ├── preprocessing.py      # EDF loading, filtering, and epoch extraction
 │   ├── csp.py                # CSP transformer
-│   ├── pipeline.py           # Required CSP + LDA pipeline
-│   ├── bonus_pipeline.py     # Optional Wavelet + LDA pipeline
+│   ├── experiments.py        # Six experiment definitions and fold mapping
+│   ├── pipeline/
+│   │   ├── pipeline.py       # Required CSP + LDA pipeline
+│   │   └── bonus_pipeline.py # Optional Wavelet + LDA pipeline
 │   ├── prediction.py         # Held-out playback and metrics
-│   └── evaluation.py         # Experiment definitions and evaluation
+│   └── evaluation.py         # Held-out evaluation orchestration
 └── notebook/                 # Exploration and pipeline notebooks
 ```
 
@@ -120,7 +158,7 @@ To train the optional Wavelet pipeline:
 python mybci.py 4 14 train --pipeline wavelet
 ```
 
-Trained artifacts are written to `models/`. The training command reports five-fold cross-validation scores, but final performance should be assessed on the held-out run.
+Trained artifacts are written to `models/`. For `python mybci.py 4 14 train`, R14 resolves to the imagined-fists-vs-feet task and training uses R6/R10 only. `LeaveOneGroupOut` evaluates the whole CSP-to-LDA scikit-learn Pipeline with one training run held out at a time, producing two cross-validation scores. Final performance is then assessed separately on the never-learned R14 data.
 
 ### 4. Run held-out prediction
 

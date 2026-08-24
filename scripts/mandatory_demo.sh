@@ -25,7 +25,7 @@ SUMMARY_LOG="${RESULT_DIR}/mandatory_summary.log"
 } 2>&1 | tee "$FULL_LOG"
 
 grep -E \
-'^===|^Experiment:|^Pipeline:|^Subject:|^Training runs:|^Cross-Validation Scores:|^Mean CV Score:|^Model saved to:|^Accuracy:|^Average Latency|^Maximum Latency|^2s latency|^Successful evaluations:|^Errored evaluations:|^Mean accuracy:|^Median accuracy:|^Standard deviation:|^Minimum accuracy:|^Maximum accuracy:|^  .*mean accuracy' \
+'^===|^Experiment:|^Pipeline:|^Subject:|^Training runs:|^Cross-Validation Scores:|^Mean CV Score:|^Model saved to:|^Accuracy:|^Average Latency|^Maximum Latency|^2s latency|^Successful evaluations:|^Errored evaluations:|^Mean accuracy:|^Mean accuracy of [0-9]+ experiments:|^Median accuracy:|^Standard deviation:|^Minimum accuracy:|^Maximum accuracy:|^  .*mean accuracy' \
 "$FULL_LOG" > "$SUMMARY_LOG"
 
 echo
