@@ -1,4 +1,6 @@
 import argparse
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 
 from src.preprocessing import filter_raw_eeg, load_raw_eeg
@@ -47,20 +49,29 @@ def main() -> None:
         duration=10,
         n_channels=20,
         scalings='auto',
-        block=True
+        block=False
     )
 
-    raw_filtered.compute_psd(fmin=8, fmax=30).plot(
+    psd_figure = raw_filtered.compute_psd(fmin=8, fmax=30).plot(
         average=True,
         picks="data",
         show=False,
     )
 
-    plt.suptitle(
+    psd_figure.suptitle(
         f"Filtered EEG PSD 8-30 Hz - S{args.subject_id:03d}R{args.run_id:02d}"
     )
 
-    plt.show()
+    output_dir = Path("results")
+    output_dir.mkdir(parents=True, exist_ok=True)
+    output_path = output_dir / (
+        f"filtered_eeg_psd_S{args.subject_id:03d}R{args.run_id:02d}.png"
+    )
+
+    psd_figure.savefig(output_path, dpi=150, bbox_inches="tight")
+    plt.close(psd_figure)
+
+    print(f"PSD image saved to: {output_path}")
 
 if __name__ == "__main__":
     main()
