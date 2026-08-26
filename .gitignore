@@ -9,3 +9,4 @@ result.log
 results
 .idea
 milestone.md
+.pytest_cache

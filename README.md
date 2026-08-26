@@ -99,6 +99,7 @@ The optional pipeline extracts Morlet wavelet band-power features over 8–30 Hz
 .
 ├── mybci.py                  # Training, prediction, and full-evaluation CLI
 ├── visualization.py         # Raw and filtered EEG visualization
+├── Makefile                  # Setup, downloads, execution, and test automation
 ├── requirements.txt
 ├── scripts/
 │   ├── import_data.sh        # PhysioNet dataset download
@@ -196,3 +197,94 @@ python visualization.py 4 14
 ```
 
 This opens interactive plots for the raw EEG, filtered EEG, and power spectral density.
+
+## Makefile Automation
+
+The project Makefile provides shortcuts for environment setup, downloads,
+visualization, model execution, the six-experiment evaluation, and tests. Run
+`make` or `make help` to list all available targets. Commands use the project
+virtual environment at `.venv/bin/python` by default.
+
+Create the virtual environment and install dependencies:
+
+```bash
+make setup
+```
+
+Download the PhysioNet EEGMMIDB dataset:
+
+```bash
+make download-data
+```
+
+The repository does not define an official pretrained-model URL. If a model
+artifact is hosted elsewhere, download it by supplying both its URL and output
+path:
+
+```bash
+make download-model \
+  MODEL_URL=https://example.com/S004_R14_csp_pipeline.joblib \
+  MODEL_FILE=models/S004_R14_csp_pipeline.joblib
+```
+
+Models can also be generated locally with `make train`; they are saved under
+`models/` using the subject, held-out run, and pipeline in the filename.
+
+### Visualization
+
+Subject 4 and run 14 are the defaults:
+
+```bash
+make visualize
+```
+
+Override them with Make variables when needed:
+
+```bash
+make visualize SUBJECT_ID=10 RUN_ID=8
+```
+
+Visualization opens interactive windows and therefore requires a graphical
+environment.
+
+### Train and predict with `mybci.py`
+
+Run the subject 4 demo separately from the full six-experiment evaluation:
+
+```bash
+# Subject 4: train and predict with held-out run 14
+make demo-4
+
+# All 109 subjects and all six experiments
+make evaluate-6
+```
+
+`demo-4` uses the CSP pipeline by default. Select the Wavelet pipeline or a
+different held-out run with variables:
+
+```bash
+make demo-4 PIPELINE=wavelet RUN_ID=14
+```
+
+Training and prediction can also be invoked independently:
+
+```bash
+make train SUBJECT_ID=4 RUN_ID=14 PIPELINE=csp
+make predict SUBJECT_ID=4 RUN_ID=14 PIPELINE=csp
+```
+
+The prediction target expects the corresponding model to have been trained or
+downloaded first. `make evaluate-6` can take substantial time because it runs
+the complete held-out evaluation.
+
+### Tests
+
+Run all tests or only the Wavelet tests:
+
+```bash
+make test
+make test-wavelet
+```
+
+Use `PYTHON=/path/to/python` to run the targets with a different Python
+interpreter.

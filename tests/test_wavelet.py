@@ -244,6 +244,6 @@ def test_wavelet_pipeline_can_fit_and_predict():
 
 
 def test_wavelet_select_pipeline_propagates_sampling_frequency():
-    pipeline = create_wavelet_select_pipeline(sfreq=128.0)
+    pipeline = create_wavelet_select_pipeline(sfreq=sfreq)
 
     assert pipeline.named_steps["wavelet"].sfreq == 128.0
