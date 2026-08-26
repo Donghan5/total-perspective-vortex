@@ -24,7 +24,7 @@ def create_wavelet_select_pipeline(k: int = 20, sfreq: float = 160.0) -> Pipelin
     This reduces the high-dimensional wavelet feature vector before LDA
     """
     return Pipeline([
-        ("wavelet", MorletWaveletTransformer()),
+        ("wavelet", MorletWaveletTransformer(sfreq=sfreq)),
         ("scaler", StandardScaler()),
         ("feature_selection", SelectKBest(score_func=f_classif, k=k)),
         ("lda", LinearDiscriminantAnalysis(solver='lsqr', shrinkage='auto'))
