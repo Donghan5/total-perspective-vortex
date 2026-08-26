@@ -32,6 +32,7 @@ setup:
 download-data:
 	./scripts/import_data.sh
 
+# I'm not sure if this needs
 download-model:
 	@test -n "$(MODEL_URL)" || (echo "MODEL_URL is required."; echo "Example: make download-model MODEL_URL=https://example/model.joblib MODEL_FILE=models/model.joblib"; exit 2)
 	@mkdir -p "$(dir $(MODEL_FILE))"
