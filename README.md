@@ -142,6 +142,10 @@ Run the following command from the project root:
 ```bash
 ./scripts/import_data.sh
 ```
+or you can simply use makefile command line tool
+```bash
+make download-data
+```
 
 The EDF files are stored under `physionet.org/files/eegmmidb/1.0.0/`.
 
