@@ -79,7 +79,10 @@ class CSP(BaseEstimator, TransformerMixin):
 
 	def fit(self, X, y):
 		"""
-			Weight fitting
+		  Fit CSP spatial filters for binary classification.
+		  Computes trace-normalized epoch covariance matrices for
+		  each class, regularizes their class-wise averages, and solves a
+		  generalized eigenvalue problem to select the requested CSP filters.
 		"""
 		X = np.asarray(X, dtype=float)
 		y = np.asarray(y)
