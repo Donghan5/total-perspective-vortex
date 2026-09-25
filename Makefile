@@ -33,40 +33,40 @@ download-data:
 	./scripts/import_data.sh
 
 download-model:
-    @echo "Downloading the models"
+	@echo "Downloading the models"
 	@test -n "$(MODEL_URL)" || (echo "MODEL_URL is required."; echo "Example: make download-model MODEL_URL=https://example/model.joblib MODEL_FILE=models/model.joblib"; exit 2)
 	@mkdir -p "$(dir $(MODEL_FILE))"
 	wget -c -O "$(MODEL_FILE)" "$(MODEL_URL)"
 
 visualize:
-    @echo "Visualizing [${SUBJECT_ID}, ${RUN_ID}]"
+	@echo "Visualizing [${SUBJECT_ID}, ${RUN_ID}]"
 	$(PYTHON) visualization.py $(SUBJECT_ID) $(RUN_ID)
 
 train:
-    @echo "Train model with [${SUBJECT_ID}, ${RUN_ID}] with ${PIPELINE}"
+	@echo "Train model with [${SUBJECT_ID}, ${RUN_ID}] with ${PIPELINE}"
 	$(PYTHON) mybci.py $(SUBJECT_ID) $(RUN_ID) train --pipeline $(PIPELINE)
 
 predict:
-    @echo "predict [${SUBJECT_ID}, ${RUN_ID}] with ${PIPELINE}"
+	@echo "predict [${SUBJECT_ID}, ${RUN_ID}] with ${PIPELINE}"
 	$(PYTHON) mybci.py $(SUBJECT_ID) $(RUN_ID) predict --pipeline $(PIPELINE)
 
 evaluate-4:
-    @echo "Evaluating 4 experiments"
+	@echo "Evaluating 4 experiments"
 	$(MAKE) train SUBJECT_ID=4 RUN_ID=$(RUN_ID) PIPELINE=$(PIPELINE)
 	$(MAKE) predict SUBJECT_ID=4 RUN_ID=$(RUN_ID) PIPELINE=$(PIPELINE)
 
 evaluate-6:
-    @echo "Evaluating 6 experiments"
+	@echo "Evaluating 6 experiments"
 	$(PYTHON) mybci.py
 
 test:
-    @echo "Testing mandatory part"
+	@echo "Testing mandatory part"
 	$(PYTHON) -m pytest -q tests
 
 test-wavelet:
-    @echo "Testing wavelet features"
+	@echo "Testing wavelet features"
 	$(PYTHON) -m pytest -q tests/test_wavelet.py
 
 clean:
-    @echo "Clean up the results and models folder"
-    rm -rf results models
+	@echo "Clean up the results and models folder"
+	rm -rf results models
