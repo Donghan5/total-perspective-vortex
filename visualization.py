@@ -72,6 +72,9 @@ def main() -> None:
     plt.close(psd_figure)
 
     print(f"PSD image saved to: {output_path}")
+    
+    print("Displaying plots. Close the plot windows to exit.")
+    plt.show(block=True)
 
 if __name__ == "__main__":
     main()
