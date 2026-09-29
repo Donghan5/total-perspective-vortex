@@ -68,7 +68,7 @@ def combine_modality_repetitions(
 ) -> EEGDataset:
     if not repetitions:
         raise ValueError(
-            "repetitions must contain at least one repetitions."
+            "repetitions must contain at least one repetition."
         )
     X_list = []
     y_list = []
@@ -118,8 +118,7 @@ def evaluate_held_out_fold(
         run_cache: RunCache
 ) -> dict:
     """
-    Evaluate the model on a held-out run.
-    Just handle one subject and one test run
+    Evaluate one subject on a held-out run or run pair.
     """
     train_runs, test_runs = experiment.get_fold_runs(held_out_index)
 
@@ -210,98 +209,3 @@ def evaluate_all_experiments(
             })
 
     return results, errors
-
-def print_evaluation_summary(
-        results: list[dict],
-        errors: list[dict],
-) -> None:
-
-    accuracies = [
-        result["accuracy"]
-        for result in results
-    ]
-
-    print("----- Overall Evalutaion Summary -----")
-    print(f"Successful evalutaions: {len(results)}")
-    print(f"Errors: {len(errors)}")
-    print(f"Mean accuarcy: {np.mean(accuracies):.4f}")
-    print(f"Median accuarcy: {np.median(accuracies):.4f}")
-    print(f"std: {np.std(accuracies):.4f}")
-    print(f"min: {np.min(accuracies):.4f}")
-    print(f"max: {np.max(accuracies):.4f}")
-
-    print("\n=== Mean Accuracy by Experiment ===")
-
-    experiment_means = []
-
-    for experiment in EXPERIMENTS.values():
-        scores = [
-            result["accuracy"]
-            for result in results
-            if result["experiment_id"]
-            == experiment.experiment_id
-        ]
-
-        if not scores:
-            continue
-
-        mean_accuracy = np.mean(scores)
-        experiment_means.append(mean_accuracy)
-
-        print(
-            f"Experiment {experiment.experiment_id} "
-            f"({experiment.name})"
-            f"{mean_accuracy:.4f}"
-        )
-
-        if experiment_means:
-            print(
-                "\nMean of experiment_means: "
-                f"{np.mean(experiment_means):.4f}"
-            )
-
-            print(
-                "Experiment with mean accuracy over equal than 60%: "
-                f"{sum(score >= 0.60 for score in experiment_means)}"
-                f"/{len(experiment_means)}"
-            )
-
-    print("\n=== Mean Accuracy by Experiment ===")
-
-    subject_means = []
-
-    subject_ids = sorted({
-        result["subject_id"]
-        for result in results
-    })
-
-    for subject_id in subject_ids:
-        scores = [
-            result["accuracy"]
-            for result in results
-            if result["subject_id"] == subject_id
-        ]
-
-        if not scores:
-            continue
-
-        subject_means.append(
-            float(np.mean(scores))
-        )
-
-    if subject_means:
-        print(
-            f"Subject evaluated: "
-            f"{len(subject_means)}/109"
-        )
-
-        print(
-            "Subject with mean accuracy over equal than 60%: "
-            f"{sum(score >= 0.60 for score in subject_means)}"
-            f"/{len(subject_means)}"
-        )
-
-        print(
-            "Maximum subject mean accuracy: "
-            f"{max(subject_means):.4f}"
-        )

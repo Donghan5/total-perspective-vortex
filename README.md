@@ -169,7 +169,7 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-The download script also requires `wget`.
+The download script also requires `curl`.
 
 ### 2. Download the dataset
 
@@ -183,6 +183,12 @@ Or use the Makefile:
 
 ```bash
 make download-data
+```
+
+For the Subject 4 / held-out R14 demo, download only the three runs needed for that task (R6, R10, and R14):
+
+```bash
+make download-sample SUBJECT_ID=4 RUN_ID=14
 ```
 
 The EDF files are stored under `physionet.org/files/eegmmidb/1.0.0/`.
@@ -238,7 +244,7 @@ This full evaluation processes 109 subjects and can take a substantial amount of
 python visualization.py 4 14
 ```
 
-This opens interactive plots for the raw EEG, filtered EEG, and power spectral density.
+This opens interactive plots for the raw and filtered EEG. It saves the filtered power spectral density as `results/filtered_eeg_psd_S004R14.png` without displaying it interactively.
 
 ## Makefile Automation
 
@@ -256,15 +262,7 @@ Download the PhysioNet EEGMMIDB dataset:
 make download-data
 ```
 
-The repository does not define an official pretrained-model URL. If a model artifact is hosted elsewhere, download it by supplying both its URL and output path:
-
-```bash
-make download-model \
-  MODEL_URL=https://example.com/S004_R14_csp_pipeline.joblib \
-  MODEL_FILE=models/S004_R14_csp_pipeline.joblib
-```
-
-Models can also be generated locally with `make train`; they are saved under `models/` using the subject, held-out run, and pipeline in the filename.
+Models are generated locally with `make train`; they are saved under `models/` using the subject, held-out run, and pipeline in the filename.
 
 ### Visualization
 
@@ -307,7 +305,7 @@ make train SUBJECT_ID=4 RUN_ID=14 PIPELINE=csp
 make predict SUBJECT_ID=4 RUN_ID=14 PIPELINE=csp
 ```
 
-The prediction target expects the corresponding model to have been trained or downloaded first. `make evaluate-6` can take substantial time because it runs the complete held-out evaluation.
+The prediction target expects the corresponding model to have been trained first. `make evaluate-6` can take substantial time because it runs the complete held-out evaluation.
 
 ### Tests
 

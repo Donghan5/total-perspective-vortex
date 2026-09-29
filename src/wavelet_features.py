@@ -105,7 +105,6 @@ def wavelet_power(coeffs: np.ndarray) -> np.ndarray:
     """
     return np.abs(coeffs) ** 2
 
-### HAVE TO CHECK MATH THINGS FROM THIS FUNCTION
 def band_power_features(
         power: np.ndarray,
         freqs: np.ndarray,
@@ -113,7 +112,7 @@ def band_power_features(
         eps: float = 1e-10
 ) -> np.ndarray:
     """
-    Compute band power features from wavelet power.
+    Average CWT power over each selected frequency band and time, then log-transform.
     """
     if bands is None:
         bands = [
