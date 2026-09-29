@@ -8,7 +8,7 @@ MODEL_FILE ?= models/pretrained_model.joblib
 
 .DEFAULT_GOAL := help
 
-.PHONY: help setup download-data download-model visualize train predict evaluate-4 evaluate-6 test test-wavelet
+.PHONY: help setup download-data download-sample visualize train predict evaluate-4 evaluate-6 test test-wavelet fclean
 
 help:
 	@echo "Available targets:"
@@ -30,6 +30,9 @@ setup:
 
 download-data:
 	./scripts/import_data.sh
+	
+download-sample:
+	./scripts/import_data.sh --sample $(SUBJECT_ID) $(RUN_ID)
 
 visualize:
 	@echo "Visualizing [${SUBJECT_ID}, ${RUN_ID}]"
@@ -63,3 +66,8 @@ test-wavelet:
 clean:
 	@echo "Clean up the results and models folder"
 	rm -rf results models
+
+fclean: clean
+	@echo "Clean up the virtual environment and all dependencies"
+	rm -rf .venv
+	rm -rf physionet.org
