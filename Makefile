@@ -14,7 +14,6 @@ help:
 	@echo "Available targets:"
 	@echo "  setup          Create .venv and install dependencies"
 	@echo "  download-data  Download the PhysioNet EEGMMIDB dataset"
-	@echo "  download-model Download a model from MODEL_URL to MODEL_FILE"
 	@echo "  visualize      Visualize SUBJECT_ID/RUN_ID EEG data"
 	@echo "  train          Train SUBJECT_ID/RUN_ID using PIPELINE"
 	@echo "  predict        Predict SUBJECT_ID/RUN_ID using PIPELINE"
@@ -31,12 +30,6 @@ setup:
 
 download-data:
 	./scripts/import_data.sh
-
-download-model:
-	@echo "Downloading the models"
-	@test -n "$(MODEL_URL)" || (echo "MODEL_URL is required."; echo "Example: make download-model MODEL_URL=https://example/model.joblib MODEL_FILE=models/model.joblib"; exit 2)
-	@mkdir -p "$(dir $(MODEL_FILE))"
-	wget -c -O "$(MODEL_FILE)" "$(MODEL_URL)"
 
 visualize:
 	@echo "Visualizing [${SUBJECT_ID}, ${RUN_ID}]"
